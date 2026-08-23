@@ -1,0 +1,7 @@
+trusted_emails:
+  - example@example.com
+target_sites:
+  - https://example.com/jobs
+ai_model: "gemini"
+run_interval_minutes: 15
+telegram_token: "YOUR_TELEGRAM_BOT_TOKEN"
