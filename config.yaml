@@ -1,7 +1,7 @@
 trusted_emails:
-  - example@example.com
+  - bopvlk@gmail.com
 target_sites:
   - https://example.com/jobs
-ai_model: "gemini"
-run_interval_minutes: 15
-telegram_token: "YOUR_TELEGRAM_BOT_TOKEN"
+ai_model: "gemini-2.5-flash"
+run_interval_minutes: 30
+
