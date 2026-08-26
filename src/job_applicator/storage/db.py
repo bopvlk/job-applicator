@@ -16,4 +16,9 @@ def init_db() -> None:
 @contextmanager
 def get_session():
     with Session(engine) as session:
-        yield session
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise

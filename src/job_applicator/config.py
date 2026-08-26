@@ -1,0 +1,45 @@
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
+
+
+class Config(BaseSettings):
+    model_config = SettingsConfigDict(
+        yaml_file="config.yaml",
+        env_file=".env",
+        extra="ignore",
+    )
+
+    # static (config.yaml)
+    trusted_emails: list[str]
+    target_sites: list[str]
+    ai_model: str
+    run_interval_minutes: int
+
+    # secrets (env / .env)
+    telegram_token: str
+    ai_api_key: str
+    database_uri: str
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+            file_secret_settings,
+        )
+
+
+def load_config() -> Config:
+    return Config()
