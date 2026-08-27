@@ -22,6 +22,11 @@ class Config(BaseSettings):
     telegram_token: str
     ai_api_key: str
     database_uri: str
+    smtp_host: str
+    smtp_port: int = 587
+    smtp_user: str
+    smtp_pass: str
+    smtp_from: str
 
     @classmethod
     def settings_customise_sources(
