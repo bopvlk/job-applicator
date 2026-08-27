@@ -7,7 +7,6 @@ from aiogram.filters import Command
 from aiogram.filters.state import StateFilter
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
 
 from job_applicator.config import load_config
 from job_applicator.services.email import send_otp
@@ -16,34 +15,6 @@ from job_applicator.storage.models import User
 
 config = load_config()
 router = Router()
-
-
-class Auth(StatesGroup):
-    email = State()
-    otp = State()
-    desired_title = State()
-
-def _gen_otp(length: int = 6) -> str:
-    return "".join(random.choices(string.digits, k=length))
-
-import random
-import string
-import time
-
-from aiogram import Router
-from aiogram.filters import Command
-from aiogram.filters.state import StateFilter
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message
-
-from job_applicator.config import load_config
-from job_applicator.services.email import send_otp
-from job_applicator.storage.db import get_session
-from job_applicator.storage.models import User
-
-config = load_config()
-router = Router()
-
 
 class Auth(StatesGroup):
     email = State()
