@@ -51,6 +51,13 @@ resource "aws_instance" "app_server" {
   key_name      = aws_key_pair.deployer.key_name 
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
+  user_data = <<-EOF
+              #!/bin/bash
+              apt update -y && apt install -y docker.io git
+              systemctl enable --now docker
+              usermod -aG docker ubuntu
+              EOF
+
   tags = {
     Name = "JobApplicator-Node"
   }
@@ -59,4 +66,30 @@ resource "aws_instance" "app_server" {
 output "server_public_ip" {
   value       = aws_instance.app_server.public_ip
   description = "IP address of our new server"
+}
+
+# 1. Створюємо IAM Role для читання SSM
+resource "aws_iam_role" "ec2_ssm_role" {
+  name = "job-applicator-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "job-applicator-instance-profile"
+  role = aws_iam_role.ec2_ssm_role.name
 }
