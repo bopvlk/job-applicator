@@ -1,9 +1,11 @@
 trusted_emails:
   - bopvlk@gmail.com
 target_sites:
-  - "linkedin.com"
-  - "dou.ua"
+  - "linkedin.com/jobs"
+  - "jobs.dou.ua"
   - "djinni.co"
+  - "work.ua"
+  - "rabota.ua"
 ai_model: "gemini-2.5-flash"
 run_interval_minutes: 3
-min_tavily_score: 0.4
+min_tavily_score: 0.1

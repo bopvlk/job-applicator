@@ -1,13 +1,13 @@
-import asyncio
+import uuid
 
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.http.models import Distance, Document, PointStruct, VectorParams
 
-from job_applicator.clients import gemini_client, qdrant
+from job_applicator.clients import qdrant
 from job_applicator.services.research import RawPosting
 
 COLLECTION_NAME = "jobs"
-EMBEDDING_MODEL = "text-embedding-004"
-VECTOR_SIZE = 768  # Dimension for text-embedding-004
+MODEL_NAME = "sentence-transformers/all-minilm-l6-v2"
+VECTOR_SIZE = 384
 
 
 async def init_qdrant() -> None:
@@ -21,44 +21,35 @@ async def init_qdrant() -> None:
         )
 
 
-async def get_embedding(text: str) -> list[float]:
-    """Generate text vector embedding via Gemini API."""
-    res = await asyncio.to_thread(
-        gemini_client.models.embed_content,
-        model=EMBEDDING_MODEL,
-        contents=text[:2000],  # Embed title + snippet
-    )
-    return res.embedding.values
-
-
 async def filter_duplicates(postings: list[RawPosting], score_threshold: float = 0.85) -> list[RawPosting]:
-    """Filter out job postings that already exist in Qdrant based on vector similarity."""
+    """Deduplicate postings using Qdrant Cloud Inference."""
     await init_qdrant()
     unique_postings: list[RawPosting] = []
 
     for posting in postings:
-        vector = await get_embedding(f"{posting.title}\n{posting.content}")
+        text_content = f"{posting.title}\n{posting.content[:1500]}"
 
-        # Search Qdrant for similar vectors
-        search_result = await qdrant.search(
-            collection_name=COLLECTION_NAME,
-            query_vector=vector,
-            limit=1,
-            score_threshold=score_threshold,
-        )
-
-        if not search_result:
-            # Not a duplicate! Keep it and store in Qdrant
-            unique_postings.append(posting)
-            await qdrant.upsert(
+        try:
+            search_result = await qdrant.query_points(
                 collection_name=COLLECTION_NAME,
-                points=[
-                    PointStruct(
-                        id=hash(posting.url) & 0x7FFFFFFFFFFFFFFF,  # positive 64-bit ID
-                        vector=vector,
-                        payload={"url": posting.url, "title": posting.title},
-                    )
-                ],
+                query=Document(text=text_content, model=MODEL_NAME),
+                limit=1,
+                score_threshold=score_threshold,
             )
+
+            if not search_result.points:
+                unique_postings.append(posting)
+                await qdrant.upsert(
+                    collection_name=COLLECTION_NAME,
+                    points=[
+                        PointStruct(
+                            id=str(uuid.uuid5(uuid.NAMESPACE_URL, posting.url)),
+                            vector=Document(text=text_content, model=MODEL_NAME),
+                            payload={"url": posting.url, "title": posting.title},
+                        )
+                    ],
+                )
+        except Exception:
+            unique_postings.append(posting)
 
     return unique_postings

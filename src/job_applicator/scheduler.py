@@ -6,6 +6,7 @@ from sqlmodel import select
 
 from job_applicator.bot.notifications import send_job_notification
 from job_applicator.config import config
+from job_applicator.enums import JobStatus
 from job_applicator.services.analysis import analyze_jobs
 from job_applicator.services.filter import filter_postings
 from job_applicator.services.queries import build_queries
@@ -114,10 +115,11 @@ async def run_job_search_pipeline() -> None:
                         red_flags=item.analysis.red_flags,
                         cover_letter=item.analysis.draft_cover_letter,
                         raw_text=item.posting.content,
-                        status="New",
+                        status=JobStatus.NEW,
                     )
-                    session.add(job_record)
-                    created_jobs.append(job_record)
+                    if item.analysis.match_percentage >= 50:
+                        session.add(job_record)
+                        created_jobs.append(job_record)
                 session.commit()
                 # Refresh IDs
                 for job in created_jobs:

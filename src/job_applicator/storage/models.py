@@ -2,6 +2,8 @@ import time
 
 from sqlmodel import Field, SQLModel
 
+from job_applicator.enums import JobStatus
+
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -20,7 +22,7 @@ class Job(SQLModel, table=True):
     uri: str
     title: str | None = None
     company: str | None = None
-    status: str = Field(default="New")
+    status: JobStatus = Field(default=JobStatus.NEW)
     match_pct: int | None = None
     company_summary: str | None = None
     red_flags: str | None = None

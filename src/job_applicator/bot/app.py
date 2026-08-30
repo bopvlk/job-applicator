@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from job_applicator.bot.handlers.auth import router as auth_router
+from job_applicator.bot.handlers.jobs import router as jobs_router
 from job_applicator.config import config
 from job_applicator.storage.db import init_db
 from job_applicator.storage.dedup import init_qdrant
@@ -11,6 +12,7 @@ from job_applicator.storage.dedup import init_qdrant
 bot = Bot(token=config.telegram_token)
 dp = Dispatcher(storage=MemoryStorage())
 dp.include_router(auth_router)
+dp.include_router(jobs_router)
 
 
 async def main() -> None:

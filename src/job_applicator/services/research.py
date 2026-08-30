@@ -18,9 +18,14 @@ class RawPosting:
 CHUNK_SIZE = 2
 
 
+IGNORE_PATTERNS = ["/zapros/", "/search", "/category", "?page=", "query=", "/jobs/search"]
+
+
 async def search_jobs(queries: list[str], domains: list[str]) -> list[RawPosting]:
     postings: list[RawPosting] = []
+    seen_urls: set[str] = set()
     domain_chunks = [domains[i : i + CHUNK_SIZE] for i in range(0, len(domains), CHUNK_SIZE)] or [None]
+
     for q in queries:
         for d_c in domain_chunks:
             data = await asyncio.to_thread(
@@ -32,16 +37,22 @@ async def search_jobs(queries: list[str], domains: list[str]) -> list[RawPosting
                 time_range="week",
                 include_domains=d_c,
             )
-    for r in data.get("results", []):
-        url = r["url"]
-        postings.append(
-            RawPosting(
-                url=url,
-                title=r["title"],
-                content=r["raw_content"] or r["content"],
-                score=float(r.get("score", 0.0)),
-            )
-        )
+            for r in data.get("results", []):
+                url = r["url"]
+
+                if any(pat in url.lower() for pat in IGNORE_PATTERNS):
+                    continue
+
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    postings.append(
+                        RawPosting(
+                            url=url,
+                            title=r["title"],
+                            content=r["raw_content"] or r["content"],
+                            score=float(r.get("score", 0.0)),
+                        )
+                    )
     return postings
 
 
