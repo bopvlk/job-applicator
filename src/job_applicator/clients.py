@@ -5,9 +5,8 @@ from google import genai
 from qdrant_client import AsyncQdrantClient
 from tavily import TavilyClient
 
-from job_applicator.config import load_config
+from job_applicator.config import config
 
-config = load_config()
 
 # Composition root for external API clients.
 # Each client is built once from Config; services import the ready object
