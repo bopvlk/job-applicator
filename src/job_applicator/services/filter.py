@@ -1,7 +1,7 @@
 from job_applicator.services.research import RawPosting
-from job_applicator.config import load_config
+from job_applicator.config import config
 
-config = load_config()
+
 
 
 def filter_postings(postings: list[RawPosting]) -> list[RawPosting]:

@@ -1,15 +1,15 @@
 from email.message import EmailMessage
 from aiosmtplib import send
-from job_applicator.config import load_config
+from job_applicator.config import config
 
-config = load_config()
+
 
 async def send_otp(to_email: str, otp: str) -> None:
     msg = EmailMessage()
     msg["From"] = config.smtp_from
     msg["To"] = to_email
-    msg["Subject"] = "ApplyBot — твій OTP"
-    msg.set_content(f"Твій код підтвердження: {otp}")
+    msg["Subject"] = "ApplyBot — your OTP"
+    msg.set_content(f"Your verification code: {otp}")
 
     await send(
         msg,

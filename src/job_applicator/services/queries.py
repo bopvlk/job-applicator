@@ -1,31 +1,33 @@
 import json
 import re
-
-from google import genai
-from job_applicator.config import load_config
+import asyncio
 from job_applicator.clients import gemini_client
+from job_applicator.config import config
 
-config = load_config()
 
-
-async def build_queries(desired_title: str) -> list[str]:
+async def build_queries(title: str) -> list[str]:
+    """Use Gemini AI to dynamically generate targeted search queries from desired_title."""
     prompt = (
-        f'Generate 3 to 5 concise job-search queries for the role "{desired_title}". '
-        f"Return ONLY a JSON array of strings, e.g. [\"q1\", \"q2\"]. No prose."
+        f'Generate 3 to 5 concise job-search query strings for the role "{title}". '
+        f'Return ONLY a raw JSON array of strings, e.g. ["query 1", "query 2"]. No markdown formatting or extra prose.'
     )
-    # точний виклик перевіримо після uv add (як робили з StateFilter)
-    resp = await gemini_client.aio.models.generate_content(
-        model=config.ai_model, contents=prompt
+    
+        # Run async call to Gemini API
+    response = await asyncio.to_thread(
+        gemini_client.models.generate_content,
+        model=config.ai_model,
+        contents=prompt,
     )
-    return _parse_queries(resp.text)
-
+    
+    return _parse_queries(response.text or "")
 
 def _parse_queries(text: str) -> list[str]:
+    """Extract and parse JSON array of strings from LLM text output."""
     match = re.search(r"\[.*\]", text, re.DOTALL)
     if not match:
         return []
     try:
         data = json.loads(match.group(0))
+        return [str(q).strip() for q in data if isinstance(q, str) and q.strip()]
     except json.JSONDecodeError:
         return []
-    return [str(q).strip() for q in data if str(q).strip()]

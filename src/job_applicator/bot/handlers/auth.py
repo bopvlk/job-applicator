@@ -8,12 +8,12 @@ from aiogram.filters.state import StateFilter
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from job_applicator.config import load_config
+from job_applicator.config import config
 from job_applicator.services.email import send_otp
 from job_applicator.storage.db import get_session
 from job_applicator.storage.models import User
 
-config = load_config()
+
 router = Router()
 
 class Auth(StatesGroup):

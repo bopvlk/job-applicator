@@ -6,16 +6,18 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from job_applicator.bot.handlers.auth import router as auth_router
-from job_applicator.config import load_config
+from job_applicator.config import config
 from job_applicator.storage.db import init_db
+from job_applicator.storage.dedup import init_qdrant
 
-config = load_config()
+
 bot = Bot(token=config.telegram_token)
 dp = Dispatcher(storage=MemoryStorage())
 dp.include_router(auth_router)
 
 async def main() -> None:
     init_db()
+    init_qdrant()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
