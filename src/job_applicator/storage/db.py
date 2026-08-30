@@ -3,9 +3,9 @@ from contextlib import contextmanager
 from sqlmodel import SQLModel, Session, create_engine
 
 import job_applicator.storage.models  # noqa: F401  (registers tables on metadata)
-from job_applicator.config import load_config
+from job_applicator.config import config
 
-config = load_config()
+
 engine = create_engine(config.database_uri, pool_pre_ping=True)
 
 
