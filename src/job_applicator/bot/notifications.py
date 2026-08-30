@@ -1,16 +1,23 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from job_applicator.bot.app import bot
+from job_applicator.bot.callbacks import JobCallback
+from job_applicator.enums import JobStatus
 from job_applicator.storage.models import Job
 
 
 def build_job_keyboard(job_id: int) -> InlineKeyboardMarkup:
-    """Build inline action buttons for a job card."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Applied", callback_data=f"job:applied:{job_id}"),
-                InlineKeyboardButton(text="❌ Reject", callback_data=f"job:rejected:{job_id}"),
+                InlineKeyboardButton(
+                    text="✅ Applied",
+                    callback_data=JobCallback(action=JobStatus.APPLIED, job_id=job_id).pack(),
+                ),
+                InlineKeyboardButton(
+                    text="❌ Reject",
+                    callback_data=JobCallback(action=JobStatus.REJECTED, job_id=job_id).pack(),
+                ),
             ]
         ]
     )
