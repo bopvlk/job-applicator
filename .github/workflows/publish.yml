@@ -41,10 +41,10 @@ jobs:
       id-token: write
       attestations: write
     # Requires environment protection rules in GitHub Settings:
-    # Settings > Environments > pypi > Add required reviewers
+    # Settings > Environments > PyPI > Add required reviewers
     # and restrict deployment to v* tags.
     environment:
-      name: pypi
+      name: PyPI
       url: https://pypi.org/p/job-applicator
     steps:
       - name: Download distribution
