@@ -1,4 +1,3 @@
-
 import aiohttp
 from google import genai
 from qdrant_client import AsyncQdrantClient
@@ -15,11 +14,13 @@ gemini_client = genai.Client(api_key=config.ai_api_key)
 # Lazy singleton so we don't build a session outside a running event loop at import.
 _http: aiohttp.ClientSession | None = None
 
+
 def get_http() -> aiohttp.ClientSession:
     global _http
     if _http is None or _http.closed:
         _http = aiohttp.ClientSession()
     return _http
+
 
 tavily = TavilyClient(api_key=config.tavily_api_key)
 

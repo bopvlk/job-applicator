@@ -1,4 +1,3 @@
-
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -52,5 +51,6 @@ class Config(BaseSettings):
             YamlConfigSettingsSource(settings_cls),
             file_secret_settings,
         )
+
 
 config = Config()

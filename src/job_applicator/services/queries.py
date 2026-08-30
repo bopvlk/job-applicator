@@ -13,7 +13,7 @@ async def build_queries(title: str) -> list[str]:
         f'Return ONLY a raw JSON array of strings, e.g. ["query 1", "query 2"]. No markdown formatting or extra prose.'
     )
 
-        # Run async call to Gemini API
+    # Run async call to Gemini API
     response = await asyncio.to_thread(
         gemini_client.models.generate_content,
         model=config.ai_model,
@@ -21,6 +21,7 @@ async def build_queries(title: str) -> list[str]:
     )
 
     return _parse_queries(response.text or "")
+
 
 def _parse_queries(text: str) -> list[str]:
     """Extract and parse JSON array of strings from LLM text output."""

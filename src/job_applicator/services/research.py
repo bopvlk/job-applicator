@@ -6,6 +6,7 @@ from job_applicator.config import config
 
 JINA_ENDPOINT = "https://r.jina.ai/"
 
+
 @dataclass
 class RawPosting:
     url: str
@@ -13,7 +14,9 @@ class RawPosting:
     content: str
     score: float = 0.0
 
-CHUNK_SIZE=2
+
+CHUNK_SIZE = 2
+
 
 async def search_jobs(queries: list[str], domains: list[str]) -> list[RawPosting]:
     postings: list[RawPosting] = []
@@ -26,7 +29,7 @@ async def search_jobs(queries: list[str], domains: list[str]) -> list[RawPosting
                 search_depth="basic",
                 max_results=5,
                 include_raw_content=True,
-                time_range='week',
+                time_range="week",
                 include_domains=d_c,
             )
     for r in data.get("results", []):
@@ -47,7 +50,7 @@ async def fetch_markdown(url: str) -> str:
     headers = {
         "X-Return-Format": "markdown",
         "X-Engine": "direct",
-        }
+    }
     if config.jina_api_key:
         headers["Authorization"] = f"Bearer {config.jina_api_key}"
     async with http.get(JINA_ENDPOINT + url, headers=headers) as resp:
