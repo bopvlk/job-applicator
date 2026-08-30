@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -6,12 +7,17 @@ from job_applicator.clients import gemini_client
 from job_applicator.config import config
 from job_applicator.services.research import RawPosting
 
+COVER_LETTER_PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "cover_letter.md"
+COVER_LETTER_PROMPT = COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip() if COVER_LETTER_PROMPT_FILE.exists() else ""
+
 
 class JobAnalysisResult(BaseModel):
     company_summary: str = Field(description="Brief summary of the company and role")
     match_percentage: int = Field(description="Match percentage (0 to 100) based on user's target role")
     red_flags: str = Field(description="Any potential red flags or warning signs in the posting")
-    draft_cover_letter: str = Field(description="Short, customized cover letter for this position")
+    draft_cover_letter: str = Field(
+        description=f"Tailored cover letter strictly following guidelines:\n{COVER_LETTER_PROMPT}"
+    )
 
 
 class AnalyzedJob(BaseModel):
@@ -29,6 +35,9 @@ async def analyze_job(posting: RawPosting, desired_title: str) -> AnalyzedJob | 
 
     Job Description:
     {posting.content[:6000]}
+
+    Candidate Cover Letter Instructions:
+    {COVER_LETTER_PROMPT}
     """
 
     try:

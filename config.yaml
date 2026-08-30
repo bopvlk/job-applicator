@@ -7,5 +7,5 @@ target_sites:
   - "work.ua"
   - "rabota.ua"
 ai_model: "gemini-2.5-flash"
-run_interval_minutes: 3
+run_interval_minutes: 30
 min_tavily_score: 0.1

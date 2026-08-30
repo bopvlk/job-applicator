@@ -11,22 +11,13 @@ provider "aws" {
   region = "eu-central-1"
 }
 
-# 1. Додаємо наш публічний SSH ключ
+# 1. SSH key
 resource "aws_key_pair" "deployer" {
   key_name   = "job-applicator-deploy-key"
   public_key = file("~/.ssh/job_applicator_key.pub")
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"]
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-}
-
+# 2. Security Group
 resource "aws_security_group" "web_sg" {
   name        = "job-applicator-sg"
   description = "Allow SSH and HTTP traffic"
@@ -54,12 +45,10 @@ resource "aws_security_group" "web_sg" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = data.aws_ami.ubuntu.id
+  ami           = "ami-0faab6bdbac9486fb"  # Ubuntu 22.04 LTS (eu-central-1)
   instance_type = "t3.micro"
   
-  # 2. Прив'язуємо ключ до сервера
   key_name      = aws_key_pair.deployer.key_name 
-
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
