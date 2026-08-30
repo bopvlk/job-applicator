@@ -68,7 +68,7 @@ output "server_public_ip" {
   description = "IP address of our new server"
 }
 
-# 1. Створюємо IAM Role для читання SSM
+# IAM Role for EC2 to read SSM Parameter Store
 resource "aws_iam_role" "ec2_ssm_role" {
   name = "job-applicator-ssm-role"
 
