@@ -1,6 +1,6 @@
+import time
 from sqlmodel import SQLModel, Field
 from typing import Optional
-
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -24,4 +24,4 @@ class Job(SQLModel, table=True):
     red_flags: Optional[str] = None
     cover_letter: Optional[str] = None
     raw_text: Optional[str] = None
-    created_at: int
+    created_at: int =  Field(default_factory=lambda: int(time.time())),
