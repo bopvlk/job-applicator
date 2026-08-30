@@ -4,4 +4,5 @@ target_sites:
   - https://example.com/jobs
 ai_model: "gemini-2.5-flash"
 run_interval_minutes: 30
+min_tavily_score: 0.4
 
