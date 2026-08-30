@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -17,6 +19,7 @@ class Config(BaseSettings):
     target_sites: list[str]
     ai_model: str
     run_interval_minutes: int
+    min_tavily_score: float = 0.4
 
     # secrets (env / .env)
     telegram_token: str
@@ -27,6 +30,12 @@ class Config(BaseSettings):
     smtp_user: str
     smtp_pass: str
     smtp_from: str
+
+    # external APIs (env / .env)
+    tavily_api_key: str 
+    jina_api_key: Optional[str] = None
+    qdrant_url: str
+    qdrant_api_key: str
 
     @classmethod
     def settings_customise_sources(
