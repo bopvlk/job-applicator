@@ -1,27 +1,28 @@
 import time
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlmodel import Field, SQLModel
+
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
-    email: str = Field(primary_key=True)
-    otp: Optional[str] = None
-    otp_expires: Optional[int] = None
+    telegram_chat_id: int = Field(primary_key=True)
+    email: str | None = Field(default=None, unique=True, index=True)
+    otp: str | None = None
+    otp_expires: int | None = None
     verified: int = Field(default=0)
-    desired_title: Optional[str] = None
+    desired_title: str | None = None
 
 
 class Job(SQLModel, table=True):
     __tablename__ = "jobs"
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_email: str = Field(foreign_key="users.email")
+    id: int | None = Field(default=None, primary_key=True)
+    user_chat_id: int = Field(foreign_key="users.telegram_chat_id")
     uri: str
-    title: Optional[str] = None
-    company: Optional[str] = None
+    title: str | None = None
+    company: str | None = None
     status: str = Field(default="New")
-    match_pct: Optional[int] = None
-    company_summary: Optional[str] = None
-    red_flags: Optional[str] = None
-    cover_letter: Optional[str] = None
-    raw_text: Optional[str] = None
-    created_at: int =  Field(default_factory=lambda: int(time.time())),
+    match_pct: int | None = None
+    company_summary: str | None = None
+    red_flags: str | None = None
+    cover_letter: str | None = None
+    raw_text: str | None = None
+    created_at: int = Field(default_factory=lambda: int(time.time()))

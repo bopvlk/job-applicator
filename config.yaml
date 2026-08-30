@@ -1,8 +1,9 @@
 trusted_emails:
   - bopvlk@gmail.com
 target_sites:
-  - https://example.com/jobs
+  - "linkedin.com"
+  - "dou.ua"
+  - "djinni.co"
 ai_model: "gemini-2.5-flash"
 run_interval_minutes: 30
 min_tavily_score: 0.4
-

@@ -1,12 +1,16 @@
 from contextlib import contextmanager
 
-from sqlmodel import SQLModel, Session, create_engine
+from sqlmodel import SQLModel, Session
+from sqlalchemy import create_engine
 
-import job_applicator.storage.models  # noqa: F401  (registers tables on metadata)
+import job_applicator.storage.models
 from job_applicator.config import config
 
 
-engine = create_engine(config.database_uri, pool_pre_ping=True)
+engine = create_engine(
+    config.database_uri,
+    pool_pre_ping=True,
+)
 
 
 def init_db() -> None:

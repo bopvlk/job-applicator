@@ -2,11 +2,8 @@ import asyncio
 from pydantic import BaseModel, Field
 
 from job_applicator.clients import gemini_client
-from job_applicator.config import get_config
+from job_applicator.config import config
 from job_applicator.services.research import RawPosting
-
-config = get_config()
-
 
 class JobAnalysisResult(BaseModel):
     company_summary: str = Field(description="Brief summary of the company and role")

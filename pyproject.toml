@@ -25,7 +25,6 @@ dependencies = [
   "aiogram",
   "pydantic-settings[yaml]",
   "sqlmodel",
-  "sqlalchemy-cockroachdb>=2.0.4",
   "psycopg2-binary>=2.9.12",
   "aiosmtplib>=5.1.2",
   "qdrant-client>=1.19.0",
@@ -34,6 +33,7 @@ dependencies = [
   "langchain-google-genai>=4.3.7",
   "langchain-community>=0.4.2",
   "apscheduler>=3.11.3",
+  "sqlalchemy-cockroachdb>=2.0.4",
 ]
 requires-python = ">= 3.12"
 

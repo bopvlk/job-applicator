@@ -7,11 +7,14 @@ from aiogram.filters import Command
 from aiogram.filters.state import StateFilter
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from sqlmodel import select
 
 from job_applicator.config import config
 from job_applicator.services.email import send_otp
 from job_applicator.storage.db import get_session
 from job_applicator.storage.models import User
+
 
 
 router = Router()
@@ -31,6 +34,32 @@ async def cmd_start(message: Message, state: FSMContext):
     await state.set_state(Auth.email)
     await message.answer("Hello! Type in your email address to get in:")
 
+@router.message(Command("stop"))
+async def cmd_stop(message: Message, state: FSMContext):
+    # 1. Clear any active FSM state
+    await state.clear()
+
+    # 2. Update user status in CockroachDB to stop notifications
+    with get_session() as s:
+        statement = select(User).where(User.telegram_chat_id == message.chat.id)
+        user = s.exec(statement).first()
+        if user:
+            user.verified = 0
+            user.telegram_chat_id = None
+            s.commit()
+
+    # 3. Optional: Delete the user's "/stop" message bubble in Telegram
+    try:
+        await message.delete()
+    except Exception:
+        pass  # Ignore if bot lacks permission to delete messages
+
+    await message.answer(
+        "🛑 <b>Job Hunter AI stopped.</b>\n"
+        "You will no longer receive automated job search notifications. Type /start anytime to re-authenticate.",
+        parse_mode="HTML"
+    )
+
 @router.message(Auth.email)
 async def process_email(message: Message, state: FSMContext):
     email = message.text.strip()
@@ -40,6 +69,10 @@ async def process_email(message: Message, state: FSMContext):
     otp = _gen_otp()
     with get_session() as s:
         user = s.get(User, email) or User(email=email)
+        if user.verified == 1:
+            await message.answer("You already verified")
+            return
+        user.telegram_chat_id = message.chat.id
         user.otp = otp
         user.otp_expires = int(time.time()) + 10 * 60
         user.verified = 0
