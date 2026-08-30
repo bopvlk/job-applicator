@@ -36,6 +36,7 @@ class Config(BaseSettings):
     jina_api_key: Optional[str] = None
     qdrant_url: str
     qdrant_api_key: str
+    jina_api_key: str
 
     @classmethod
     def settings_customise_sources(
@@ -54,6 +55,4 @@ class Config(BaseSettings):
             file_secret_settings,
         )
 
-
-def load_config() -> Config:
-    return Config()
+config = Config()

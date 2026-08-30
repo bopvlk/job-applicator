@@ -33,6 +33,7 @@ dependencies = [
   "tavily-python>=0.8.0",
   "langchain-google-genai>=4.3.7",
   "langchain-community>=0.4.2",
+  "apscheduler>=3.11.3",
 ]
 requires-python = ">= 3.12"
 
