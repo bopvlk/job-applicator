@@ -1,7 +1,8 @@
 from email.message import EmailMessage
-from aiosmtplib import send
-from job_applicator.config import config
 
+from aiosmtplib import send
+
+from job_applicator.config import config
 
 
 async def send_otp(to_email: str, otp: str) -> None:

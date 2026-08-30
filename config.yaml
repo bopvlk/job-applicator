@@ -5,5 +5,5 @@ target_sites:
   - "dou.ua"
   - "djinni.co"
 ai_model: "gemini-2.5-flash"
-run_interval_minutes: 30
+run_interval_minutes: 3
 min_tavily_score: 0.4

@@ -1,6 +1,7 @@
+import asyncio
 import json
 import re
-import asyncio
+
 from job_applicator.clients import gemini_client
 from job_applicator.config import config
 
@@ -11,14 +12,14 @@ async def build_queries(title: str) -> list[str]:
         f'Generate 3 to 5 concise job-search query strings for the role "{title}". '
         f'Return ONLY a raw JSON array of strings, e.g. ["query 1", "query 2"]. No markdown formatting or extra prose.'
     )
-    
+
         # Run async call to Gemini API
     response = await asyncio.to_thread(
         gemini_client.models.generate_content,
         model=config.ai_model,
         contents=prompt,
     )
-    
+
     return _parse_queries(response.text or "")
 
 def _parse_queries(text: str) -> list[str]:

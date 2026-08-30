@@ -1,4 +1,3 @@
-from typing import Optional
 
 from pydantic_settings import (
     BaseSettings,
@@ -32,8 +31,8 @@ class Config(BaseSettings):
     smtp_from: str
 
     # external APIs (env / .env)
-    tavily_api_key: str 
-    jina_api_key: Optional[str] = None
+    tavily_api_key: str
+    jina_api_key: str | None = None
     qdrant_url: str
     qdrant_api_key: str
 

@@ -1,4 +1,5 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
 from job_applicator.bot.app import bot
 from job_applicator.storage.models import Job
 
@@ -24,7 +25,7 @@ async def send_job_notification(chat_id: int, job: Job) -> None:
         f"<b>⚠️ Red Flags:</b>\n{job.red_flags or 'None'}\n\n"
         f"<b>📝 Draft Cover Letter:</b>\n<code>{job.cover_letter}</code>"
     )
-    
+
     await bot.send_message(
         chat_id=chat_id,
         text=text,

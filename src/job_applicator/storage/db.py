@@ -1,11 +1,9 @@
 from contextlib import contextmanager
 
-from sqlmodel import SQLModel, Session
 from sqlalchemy import create_engine
+from sqlmodel import Session, SQLModel
 
-import job_applicator.storage.models
 from job_applicator.config import config
-
 
 engine = create_engine(
     config.database_uri,

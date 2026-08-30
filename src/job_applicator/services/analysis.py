@@ -1,9 +1,11 @@
 import asyncio
+
 from pydantic import BaseModel, Field
 
 from job_applicator.clients import gemini_client
 from job_applicator.config import config
 from job_applicator.services.research import RawPosting
+
 
 class JobAnalysisResult(BaseModel):
     company_summary: str = Field(description="Brief summary of the company and role")
@@ -24,7 +26,7 @@ async def analyze_job(posting: RawPosting, desired_title: str) -> AnalyzedJob | 
 
     Job Title: {posting.title}
     Job URL: {posting.url}
-    
+
     Job Description:
     {posting.content[:6000]}
     """
@@ -40,7 +42,7 @@ async def analyze_job(posting: RawPosting, desired_title: str) -> AnalyzedJob | 
                 "response_schema": JobAnalysisResult,
             },
         )
-        
+
         # Parse Pydantic object directly from JSON
         result = JobAnalysisResult.model_validate_json(response.text)
         return AnalyzedJob(posting=posting, analysis=result)

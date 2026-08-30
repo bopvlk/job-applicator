@@ -1,7 +1,8 @@
 import asyncio
-from qdrant_client.models import Distance, VectorParams, PointStruct
 
-from job_applicator.clients import qdrant, gemini_client
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from job_applicator.clients import gemini_client, qdrant
 from job_applicator.services.research import RawPosting
 
 COLLECTION_NAME = "jobs"
@@ -37,7 +38,7 @@ async def filter_duplicates(postings: list[RawPosting], score_threshold: float =
 
     for posting in postings:
         vector = await get_embedding(f"{posting.title}\n{posting.content}")
-        
+
         # Search Qdrant for similar vectors
         search_result = await qdrant.search(
             collection_name=COLLECTION_NAME,
