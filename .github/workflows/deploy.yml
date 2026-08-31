@@ -63,17 +63,22 @@ jobs:
 
       - name: Deploy to AWS EC2 via SSH
         uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: GITHUB_TOKEN,GITHUB_ACTOR,IMAGE_NAME
           script: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+            docker pull ghcr.io/$IMAGE_NAME:latest
             docker stop job-applicator || true
             docker rm job-applicator || true
             docker run -d \
               --name job-applicator \
               --restart always \
               --env-file /home/ubuntu/.env \
-              ghcr.io/${{ env.IMAGE_NAME }}:latest
+              ghcr.io/$IMAGE_NAME:latest
