@@ -26,6 +26,7 @@ jobs:
     name: 🚀 Build & Deploy to AWS EC2
     needs: lint
     runs-on: ubuntu-latest
+    environment: main
     permissions:
       contents: read
       packages: write
