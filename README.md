@@ -1,58 +1,73 @@
-# job-applicator
+# Job Hunter AI 🚀
 
-![PyPI version](https://img.shields.io/pypi/v/job-applicator.svg)
+An autonomous, production-grade AI Agent that automates the job search lifecycle: scanning multiple job boards, performing semantic deduplication using vector embeddings, evaluating role fit with Gemini 2.5, and drafting highly tailored, context-aware cover letters.
 
-Job Applicator
+---
 
-* [GitHub](https://github.com/boplk/job-applicator/) | [PyPI](https://pypi.org/project/job-applicator/) | [Documentation](https://boplk.github.io/job-applicator/)
-* Created by [Bogdan Pavliuk](https://audrey.feldroy.com/) | GitHub [@bopvlk](https://github.com/bopvlk) | PyPI [@bopvlk](https://pypi.org/user/bopvlk/)
-* MIT License
+## 🌟 System Architecture
 
-## Features
-
-* TODO
-
-## Documentation
-
-Documentation is built with [Zensical](https://zensical.org/) and deployed to GitHub Pages.
-
-* **Live site:** https://boplk.github.io/job-applicator/
-* **Preview locally:** `just docs-serve` (serves at http://localhost:8000)
-* **Build:** `just docs-build`
-
-API documentation is auto-generated from docstrings using [mkdocstrings](https://mkdocstrings.github.io/).
-
-Docs deploy automatically on push to `main` via GitHub Actions. To enable this, go to your repo's Settings > Pages and set the source to **GitHub Actions**.
-
-## Development
-
-To set up for local development:
-
-```bash
-# Clone your fork
-git clone git@github.com:your_username/job-applicator.git
-cd job-applicator
-
-# Install in editable mode with live updates
-uv tool install --editable .
+```mermaid
+graph TD
+    A[APScheduler / Cron] -->|Trigger| B[Tavily Search API]
+    B -->|Scrape Job Listings| C[Jina AI Reader]
+    C -->|Raw Markdown| D[Qdrant Vector DB]
+    D -->|Cosine Similarity| E{Is Duplicate?}
+    E -->|Yes| F[Ignore & Skip]
+    E -->|No| G[Google Gemini 2.5 Flash]
+    G -->|Structured Pydantic Analysis| H[CockroachDB Serverless]
+    H -->|Save Job State| I[Telegram Bot Notifications]
+    I -->|Interactive Buttons| J[User Chat]
 ```
 
-This installs the CLI globally but with live updates - any changes you make to the source code are immediately available when you run `job_applicator`.
+---
 
-Run tests:
+## 🚀 Key Engineering Pillars
 
+### 🧠 Structured LLM Reasoning (Gemini 2.5)
+Instead of returning raw text, the AI agent evaluates job postings using strict **Pydantic schemas**. Gemini outputs a structured JSON response containing:
+- **Match Score (0-100%)** based on the candidate's target profile.
+- **Red Flags** (e.g., outdated stack, mismatched requirements, unclear expectations).
+- **Tailored Cover Letter** customized to the specific job details using the candidate's professional bio and achievements.
+
+### 🔍 Semantic Deduplication (Qdrant Vector DB)
+To prevent showing the same job posting twice (even if published on different sites with minor wording changes), the app:
+1. Converts the job title and snippet into a vector embedding.
+2. Performs a cosine similarity search on **Qdrant Cloud**.
+3. Gates the pipeline: if a similar posting exists above the `0.85` similarity threshold, it is automatically skipped.
+
+### ⚡ Distributed SQL Architecture (CockroachDB)
+User profiles, verified states, OTP codes, and job application tracking are stored in a distributed **CockroachDB Serverless** database using the modern **SQLModel** (SQLAlchemy + Pydantic) ORM, ensuring high availability and ACID compliance.
+
+### 🤖 Interactive User Experience (Telegram Bot)
+Built with **Aiogram 3**, the Telegram bot serves as the command center:
+- Secure **email OTP authentication** against a trusted user whitelist.
+- Dynamic target role updates via `/set_title`.
+- Rich notification cards with inline callback buttons (`✅ Applied` / `❌ Reject`) that update application states in CockroachDB in real time.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Backend:** Python 3.13, `uv` (fast package manager), `pydantic-settings`
+- **Scheduler:** `APScheduler`
+- **Databases:** CockroachDB, Qdrant Cloud
+- **APIs:** Google Gemini (google-genai), Tavily AI Search, Jina Reader
+- **Infrastructure:** AWS EC2, Terraform (IaC), Docker
+- **CI/CD:** GitHub Actions, GitHub Container Registry (GHCR)
+
+---
+
+## 💻 Quick Start
+
+### 1. Local Run
+To start the bot and scheduler locally:
 ```bash
-uv run pytest
+make run
 ```
 
-Run quality checks (format, lint, type check, test):
-
+### 2. Infrastructure & Deploy
+The infrastructure is completely declarative. To provision AWS resources and deploy the latest Dockerized version:
 ```bash
-just qa
+terraform apply -auto-approve
+make deploy
 ```
-
-## Author
-
-job-applicator was created in 2026 by Bogdan Pavliuk.
-
-Built with [Cookiecutter](https://github.com/cookiecutter/cookiecutter) and the [audreyfeldroy/cookiecutter-pypackage](https://github.com/audreyfeldroy/cookiecutter-pypackage) project template.
