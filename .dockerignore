@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+.ruff_cache
+.terraform
+*.tfstate
+*.tfstate.*
+.env
+.DS_Store
+__pycache__
+*.pyc
+tests
+docs
+Makefile
+justfile
+
