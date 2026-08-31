@@ -8,7 +8,9 @@ from job_applicator.config import config
 from job_applicator.services.research import RawPosting
 
 COVER_LETTER_PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "cover_letter.md"
-COVER_LETTER_PROMPT = COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip() if COVER_LETTER_PROMPT_FILE.exists() else ""
+COVER_LETTER_PROMPT = (
+    COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip() if COVER_LETTER_PROMPT_FILE.exists() else ""
+)
 
 
 class JobAnalysisResult(BaseModel):
