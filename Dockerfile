@@ -9,10 +9,11 @@ ENV PYTHONUNBUFFERED=1
 
 # Install dependencies first for efficient layer caching
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy application source code and configurations
 COPY . .
+RUN uv sync --frozen --no-dev
 
 # Start Job Hunter AI
 CMD ["uv", "run", "python", "-m", "job_applicator"]
