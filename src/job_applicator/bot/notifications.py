@@ -37,6 +37,6 @@ async def send_job_notification(chat_id: int, job: Job) -> None:
         chat_id=chat_id,
         text=text,
         parse_mode="HTML",
-        reply_markup=build_job_keyboard(job.id),
+        reply_markup=build_job_keyboard(job.id or 0),
         disable_web_page_preview=True,
     )

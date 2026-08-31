@@ -113,6 +113,8 @@ async def cmd_stop(message: Message, state: FSMContext):
 
 @router.message(Auth.email)
 async def process_email(message: Message, state: FSMContext):
+    if not message.text:
+        return
     email = message.text.strip().lower()
     if email not in [e.lower() for e in config.trusted_emails]:
         await message.answer("⛔ You are not on the trusted list. Please try again with a valid authorized email.")
@@ -138,9 +140,10 @@ async def process_email(message: Message, state: FSMContext):
 
 @router.message(Auth.otp)
 async def process_otp(message: Message, state: FSMContext):
+    text = message.text.strip() if message.text else ""
     with get_session() as s:
         user = s.get(User, message.chat.id)
-        if not user or user.otp != message.text.strip() or (user.otp_expires or 0) < int(time.time()):
+        if not user or user.otp != text or (user.otp_expires or 0) < int(time.time()):
             await message.answer("❌ Invalid or expired verification code. Please check your email and try again.")
             return
         user.otp = None
@@ -158,6 +161,8 @@ async def process_otp(message: Message, state: FSMContext):
 
 @router.message(Auth.desired_title)
 async def process_desired_title(message: Message, state: FSMContext):
+    if not message.text:
+        return
     new_title = message.text.strip()
     with get_session() as s:
         user = s.get(User, message.chat.id)

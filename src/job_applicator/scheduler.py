@@ -44,7 +44,7 @@ async def run_job_search_pipeline() -> None:
 
     # 1. Fetch all verified users from CockroachDB
     with get_session() as session:
-        statement = select(User).where(User.verified == 1, User.desired_title.is_not(None))
+        statement = select(User).where(User.verified == 1, User.desired_title != None)  # noqa: E711
         users = session.exec(statement).all()
 
     if not users:

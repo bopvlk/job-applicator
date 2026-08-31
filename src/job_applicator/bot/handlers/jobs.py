@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from job_applicator.bot.callbacks import JobCallback
 from job_applicator.storage.db import get_session
@@ -17,7 +17,7 @@ async def process_job_status(callback: CallbackQuery, callback_data: JobCallback
             s.commit()
 
     await callback.answer(f"Set as {callback_data.action.value}")
-    if callback.message:
+    if isinstance(callback.message, Message) and callback.message.text:
         await callback.message.edit_text(
             text=f"{callback.message.text}\n\n<b>📌 Status:</b> {callback_data.action.value}",
             parse_mode="HTML",

@@ -55,6 +55,8 @@ async def analyze_job(posting: RawPosting, desired_title: str) -> AnalyzedJob | 
         )
 
         # Parse Pydantic object directly from JSON
+        if not response.text:
+            return None
         result = JobAnalysisResult.model_validate_json(response.text)
         return AnalyzedJob(posting=posting, analysis=result)
     except Exception:

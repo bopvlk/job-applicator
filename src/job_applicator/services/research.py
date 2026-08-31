@@ -24,19 +24,31 @@ IGNORE_PATTERNS = ["/zapros/", "/search", "/category", "?page=", "query=", "/job
 async def search_jobs(queries: list[str], domains: list[str]) -> list[RawPosting]:
     postings: list[RawPosting] = []
     seen_urls: set[str] = set()
-    domain_chunks = [domains[i : i + CHUNK_SIZE] for i in range(0, len(domains), CHUNK_SIZE)] or [None]
+    domain_chunks: list[list[str]] = (
+        [domains[i : i + CHUNK_SIZE] for i in range(0, len(domains), CHUNK_SIZE)] if domains else [[]]
+    )
 
     for q in queries:
         for d_c in domain_chunks:
-            data = await asyncio.to_thread(
-                tavily.search,
-                query=q,
-                search_depth="basic",
-                max_results=5,
-                include_raw_content=True,
-                time_range="week",
-                include_domains=d_c,
-            )
+            if d_c:
+                data = await asyncio.to_thread(
+                    tavily.search,
+                    query=q,
+                    search_depth="basic",
+                    max_results=5,
+                    include_raw_content=True,
+                    time_range="week",
+                    include_domains=d_c,
+                )
+            else:
+                data = await asyncio.to_thread(
+                    tavily.search,
+                    query=q,
+                    search_depth="basic",
+                    max_results=5,
+                    include_raw_content=True,
+                    time_range="week",
+                )
             for r in data.get("results", []):
                 url = r["url"]
 
