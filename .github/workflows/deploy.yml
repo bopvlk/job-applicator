@@ -84,8 +84,14 @@ jobs:
             docker pull ghcr.io/$IMAGE_NAME:latest
             docker stop job-applicator || true
             docker rm job-applicator || true
+            SSM_PARAMS=$(aws ssm get-parameters-by-path \
+              --path "/job-applicator/" \
+              --with-decryption \
+              --region eu-central-1 \
+              --query "Parameters[*].[Name,Value]" \
+              --output text | awk '{gsub("/job-applicator/", ""); print "-e " $1 "=" $2}')
             docker run -d \
               --name job-applicator \
               --restart always \
-              --env-file /home/ubuntu/.env \
+              $SSM_PARAMS \
               ghcr.io/$IMAGE_NAME:latest
