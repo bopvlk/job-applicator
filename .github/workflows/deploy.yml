@@ -87,7 +87,7 @@ jobs:
             SSM_PARAMS=$(aws ssm get-parameters-by-path \
               --path "/job-applicator/" \
               --with-decryption \
-              --region eu-central-1 \
+              --region eu-north-1 \
               --query "Parameters[*].[Name,Value]" \
               --output text | awk '{gsub("/job-applicator/", ""); print "-e " $1 "=" $2}')
             docker run -d \

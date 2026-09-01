@@ -8,4 +8,4 @@ target_sites:
   - "rabota.ua"
 ai_model: "gemini-2.5-flash"
 run_interval_minutes: 30
-min_tavily_score: 0.1
+min_tavily_score: 0.3
