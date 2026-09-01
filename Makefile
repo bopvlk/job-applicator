@@ -20,6 +20,9 @@ test: ## Run test suite
 
 deploy: ## Automatically bump patch tag and push to trigger CI/CD deploy (or specify TAG=v1.0.0)
 	@LATEST_TAG=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+deploy: ## Automatically bump patch tag, create empty release commit, and push to trigger CI/CD deploy (or specify TAG=v1.0.0)
+	@LATEST_TAG=$$(git tag -l "v*" --sort=-v:refname | head -n 1); \
+	LATEST_TAG=$${LATEST_TAG:-v0.0.0}; \
 	if [ -n "$(TAG)" ]; then \
 		NEXT_TAG="$(TAG)"; \
 	else \
@@ -32,7 +35,12 @@ deploy: ## Automatically bump patch tag and push to trigger CI/CD deploy (or spe
 	fi; \
 	echo "🚀 Previous Tag: $$LATEST_TAG"; \
 	echo "🏷️  Creating Next Tag: $$NEXT_TAG"; \
+	echo "🚀 Latest Tag: $$LATEST_TAG"; \
+	echo "🏷️  Next Release Tag: $$NEXT_TAG"; \
+	git commit --allow-empty -m "chore(release): $$NEXT_TAG" && \
 	git tag "$$NEXT_TAG" && \
+	git push origin HEAD && \
 	git push origin "$$NEXT_TAG" && \
 	echo "✅ Tag $$NEXT_TAG pushed successfully! GitHub Actions CI/CD deployment started."
+	echo "✅ Created release commit and pushed $$NEXT_TAG successfully! CI/CD deploy started."
 
