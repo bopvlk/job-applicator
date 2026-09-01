@@ -51,13 +51,17 @@ resource "aws_instance" "app_server" {
   key_name      = aws_key_pair.deployer.key_name 
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
+  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
+
   user_data = <<-EOF
               #!/bin/bash
-              apt update -y && apt install -y docker.io git
+              apt update -y && apt install -y docker.io git awscli
               systemctl enable --now docker
               usermod -aG docker ubuntu
               EOF
 
+  user_data_replace_on_change = true
+  
   tags = {
     Name = "JobApplicator-Node"
   }
