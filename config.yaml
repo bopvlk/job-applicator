@@ -6,6 +6,12 @@ target_sites:
   - "djinni.co"
   - "work.ua"
   - "rabota.ua"
+  - "devjob.ro/en/jobs"
+  - "ejobs.ro"
+  - "joburiit.ro"
+  - "joburi-it.ro"
+  - "bestjobs.eu"
+  - "glassdoor.com"
 ai_model: "gemini-2.5-flash"
 run_interval_minutes: 30
 min_tavily_score: 0.3
