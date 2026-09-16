@@ -1,4 +1,5 @@
 import aiohttp
+from aiogram import Bot
 from google import genai
 from qdrant_client import AsyncQdrantClient
 from tavily import TavilyClient
@@ -26,3 +27,6 @@ tavily = TavilyClient(api_key=config.tavily_api_key)
 
 # Qdrant gets the official async client (vector upsert/search would be bug-prone by hand).
 qdrant = AsyncQdrantClient(url=config.qdrant_url, api_key=config.qdrant_api_key)
+
+# Telegram Bot client singleton
+bot = Bot(token=config.telegram_token)
