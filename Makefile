@@ -1,4 +1,4 @@
-.PHONY: help run dev lint format test deploy
+.PHONY: help run dev lint format test deploy format
 
 # Default goal
 .DEFAULT_GOAL := help
@@ -39,3 +39,5 @@ deploy: ## Automatically bump patch tag, create empty release commit, and push t
 	git push origin "$$NEXT_TAG" && \
 	echo "✅ Created release commit and pushed $$NEXT_TAG successfully! CI/CD deploy started."
 
+format: ## Run code formatter
+	uvx ruff format .
