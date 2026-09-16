@@ -14,13 +14,12 @@ from job_applicator.storage.models import User
 
 logger = logging.getLogger(__name__)
 
-COVER_LETTER_PROMPT_FILE = (
-    Path(__file__).parent.parent / "prompts" / "cover_letter.md"
-)
+COVER_LETTER_PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "cover_letter.md"
 
 
 class UserProfileDTO(TypedDict):
     """Candidate profile parsed from PDF."""
+
     years_experience: int | None
     top_skills: list[str]
     key_achievements: list[str]
@@ -31,6 +30,7 @@ class UserProfileDTO(TypedDict):
 
 class CoverLetterVariants(TypedDict):
     """3 distinct tailored cover letter variations."""
+
     variant_1: str
     variant_2: str
     variant_3: str
@@ -38,6 +38,7 @@ class CoverLetterVariants(TypedDict):
 
 class JobAnalysisResult(TypedDict):
     """Multi-factor evaluation breakdown and quality gate."""
+
     is_single_job_posting: bool
     is_active_and_fresh: bool
     company_summary: str
@@ -58,20 +59,16 @@ class AnalyzedJob:
 def _build_candidate_context(user: User) -> str:
     """Format candidate profile attributes for prompt injection."""
     skills = ", ".join(user.top_skills) if user.top_skills else "Not specified"
-    achievements = (
-        "\n".join(f"- {a}" for a in user.key_achievements)
-        if user.key_achievements
-        else "Not specified"
-    )
+    achievements = "\n".join(f"- {a}" for a in user.key_achievements) if user.key_achievements else "Not specified"
     return f"""
-- Target Role: {user.desired_title or 'Software Engineer'}
+- Target Role: {user.desired_title or "Software Engineer"}
 - Commercial Experience: {user.years_experience or 3}+ years
 - Top Skills: {skills}
 - Key Achievements:
 {achievements}
-- Location & Preferences: {user.preferred_location or 'Remote (EU/Global)'}
-- Salary Expectations: {user.min_salary or 'Open / Market'}
-- Professional Bio: {user.bio_summary or 'Experienced engineer'}
+- Location & Preferences: {user.preferred_location or "Remote (EU/Global)"}
+- Salary Expectations: {user.min_salary or "Open / Market"}
+- Professional Bio: {user.bio_summary or "Experienced engineer"}
 """.strip()
 
 
@@ -96,7 +93,11 @@ async def parse_resume_pdf(pdf_bytes: bytes) -> UserProfileDTO | None:
         data: UserProfileDTO = json.loads(response.text)
         return data
     except Exception as e:
-        logger.error("Failed to parse resume PDF with Gemini", exc_info=True, extra={"event": "resume_pdf_parse_error", "error": str(e)})
+        logger.error(
+            "Failed to parse resume PDF with Gemini",
+            exc_info=True,
+            extra={"event": "resume_pdf_parse_error", "error": str(e)},
+        )
         return None
 
 
@@ -134,29 +135,25 @@ async def analyze_job(posting: RawPosting, user: User) -> AnalyzedJob | None:
         result: JobAnalysisResult = json.loads(response.text)
         return AnalyzedJob(posting=posting, analysis=result)
     except Exception as e:
-        logger.error("Failed to analyze job with Gemini", exc_info=True, extra={"event": "job_analysis_error", "url": posting.url, "error": str(e)})
+        logger.error(
+            "Failed to analyze job with Gemini",
+            exc_info=True,
+            extra={"event": "job_analysis_error", "url": posting.url, "error": str(e)},
+        )
         return None
 
 
-async def analyze_jobs(
-    postings: list[RawPosting], user: User
-) -> list[AnalyzedJob]:
+async def analyze_jobs(postings: list[RawPosting], user: User) -> list[AnalyzedJob]:
     """Analyze multiple job postings in parallel."""
     tasks = [analyze_job(p, user) for p in postings]
     results = await asyncio.gather(*tasks)
     return [r for r in results if r is not None]
 
 
-async def generate_cover_letters(
-    job_title: str, job_content: str, user: User
-) -> CoverLetterVariants | None:
+async def generate_cover_letters(job_title: str, job_content: str, user: User) -> CoverLetterVariants | None:
     """Generate 3 tailored cover letter variants on-demand based on custom prompt file."""
     candidate_profile = _build_candidate_context(user)
-    template = (
-        COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip()
-        if COVER_LETTER_PROMPT_FILE.exists()
-        else ""
-    )
+    template = COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip() if COVER_LETTER_PROMPT_FILE.exists() else ""
 
     if "{candidate_profile}" in template and "{job_description}" in template:
         prompt = template.format(
@@ -190,5 +187,9 @@ async def generate_cover_letters(
         data: CoverLetterVariants = json.loads(response.text)
         return data
     except Exception as e:
-        logger.error("Failed to generate cover letters with Gemini", exc_info=True, extra={"event": "cover_letter_gen_error", "job_title": job_title, "error": str(e)})
+        logger.error(
+            "Failed to generate cover letters with Gemini",
+            exc_info=True,
+            extra={"event": "cover_letter_gen_error", "job_title": job_title, "error": str(e)},
+        )
         return None

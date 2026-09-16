@@ -29,7 +29,9 @@ async def set_bot_commands(bot_instance: Bot) -> None:
         BotCommand(command="stop", description="🛑 Pause search notifications"),
     ]
     await bot_instance.set_my_commands(commands)
-    logger.info("Telegram bot menu commands registered", extra={"event": "bot_commands_registered", "count": len(commands)})
+    logger.info(
+        "Telegram bot menu commands registered", extra={"event": "bot_commands_registered", "count": len(commands)}
+    )
 
 
 async def main() -> None:

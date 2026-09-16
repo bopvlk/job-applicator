@@ -43,7 +43,10 @@ async def cmd_start(message: Message, state: FSMContext):
     with get_session() as s:
         user = s.get(User, message.chat.id)
         if user and user.verified == 1:
-            logger.info("Authenticated user reopened bot", extra={"event": "user_start_authenticated", "user_id": message.chat.id})
+            logger.info(
+                "Authenticated user reopened bot",
+                extra={"event": "user_start_authenticated", "user_id": message.chat.id},
+            )
             await message.answer(
                 f"👋 <b>Welcome back!</b>\n\n"
                 f"• <b>Email:</b> <code>{user.email}</code>\n"
@@ -59,7 +62,9 @@ async def cmd_start(message: Message, state: FSMContext):
             )
             return
 
-    logger.info("New user started authentication flow", extra={"event": "auth_flow_started", "user_id": message.chat.id})
+    logger.info(
+        "New user started authentication flow", extra={"event": "auth_flow_started", "user_id": message.chat.id}
+    )
     await state.set_state(Auth.email)
     await message.answer(
         "👋 <b>Welcome to Job Applicator AI!</b>\n\nPlease enter your email address to authenticate:",
@@ -76,7 +81,10 @@ async def cmd_search_now(message: Message):
             await message.answer("⚠️ You must be authenticated first. Type /start to begin.")
             return
 
-    logger.info("User triggered on-demand live search", extra={"event": "on_demand_search_triggered", "user_id": message.chat.id, "role": user.desired_title})
+    logger.info(
+        "User triggered on-demand live search",
+        extra={"event": "on_demand_search_triggered", "user_id": message.chat.id, "role": user.desired_title},
+    )
     progress_msg = await message.answer(
         f"🔍 <b>Hunting for jobs now...</b>\n\n"
         f"• <b>Role:</b> {user.desired_title}\n"
@@ -96,8 +104,14 @@ async def cmd_search_now(message: Message):
             parse_mode="HTML",
         )
     except Exception as e:
-        logger.error("Error during on-demand search", exc_info=True, extra={"event": "on_demand_search_failed", "user_id": message.chat.id, "error": str(e)})
-        await progress_msg.edit_text("❌ <b>Search encountered an error.</b> Please try again in a minute.", parse_mode="HTML")
+        logger.error(
+            "Error during on-demand search",
+            exc_info=True,
+            extra={"event": "on_demand_search_failed", "user_id": message.chat.id, "error": str(e)},
+        )
+        await progress_msg.edit_text(
+            "❌ <b>Search encountered an error.</b> Please try again in a minute.", parse_mode="HTML"
+        )
 
 
 @router.message(Command("profile"))
@@ -111,12 +125,22 @@ async def cmd_profile(message: Message):
 
         # Calculate statistics from Job table
         total_sent = s.exec(select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id)).one()
-        applied_count = s.exec(select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.APPLIED)).one()
-        rejected_count = s.exec(select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.REJECTED)).one()
-        pending_count = s.exec(select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.NEW)).one()
+        applied_count = s.exec(
+            select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.APPLIED)
+        ).one()
+        rejected_count = s.exec(
+            select(func.count(Job.id)).where(
+                Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.REJECTED
+            )
+        ).one()
+        pending_count = s.exec(
+            select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.NEW)
+        ).one()
 
     skills_text = ", ".join(user.top_skills) if user.top_skills else "<i>Not set (Use /upload_resume)</i>"
-    achievements_text = "\n".join(f"  • {a}" for a in user.key_achievements) if user.key_achievements else "<i>Not set</i>"
+    achievements_text = (
+        "\n".join(f"  • {a}" for a in user.key_achievements) if user.key_achievements else "<i>Not set</i>"
+    )
 
     await message.answer(
         f"👤 <b>Candidate Profile:</b>\n\n"
@@ -180,7 +204,9 @@ async def process_resume_document(message: Message, state: FSMContext):
         # Parse with Gemini
         profile_data = await parse_resume_pdf(pdf_bytes)
         if not profile_data:
-            await progress.edit_text("❌ Failed to parse resume content. Please ensure the PDF is text-readable.", parse_mode="HTML")
+            await progress.edit_text(
+                "❌ Failed to parse resume content. Please ensure the PDF is text-readable.", parse_mode="HTML"
+            )
             return
 
         with get_session() as s:
@@ -195,7 +221,14 @@ async def process_resume_document(message: Message, state: FSMContext):
                 s.commit()
 
         await state.clear()
-        logger.info("Resume successfully parsed and saved", extra={"event": "resume_parsed_saved", "user_id": message.chat.id, "skills_count": len(profile_data.get("top_skills", []))})
+        logger.info(
+            "Resume successfully parsed and saved",
+            extra={
+                "event": "resume_parsed_saved",
+                "user_id": message.chat.id,
+                "skills_count": len(profile_data.get("top_skills", [])),
+            },
+        )
         await progress.edit_text(
             f"✅ <b>Resume Successfully Scanned!</b>\n\n"
             f"• <b>Experience:</b> {profile_data.get('years_experience')} years\n"
@@ -205,7 +238,11 @@ async def process_resume_document(message: Message, state: FSMContext):
             parse_mode="HTML",
         )
     except Exception as e:
-        logger.error("Resume upload handler error", exc_info=True, extra={"event": "resume_upload_error", "user_id": message.chat.id, "error": str(e)})
+        logger.error(
+            "Resume upload handler error",
+            exc_info=True,
+            extra={"event": "resume_upload_error", "user_id": message.chat.id, "error": str(e)},
+        )
         await progress.edit_text("❌ An error occurred during resume scanning.", parse_mode="HTML")
 
 
@@ -260,7 +297,10 @@ async def cmd_stop(message: Message, state: FSMContext):
         if user:
             user.verified = 0
             s.commit()
-            logger.info("User paused job search notifications", extra={"event": "user_search_paused", "user_id": message.chat.id})
+            logger.info(
+                "User paused job search notifications",
+                extra={"event": "user_search_paused", "user_id": message.chat.id},
+            )
 
     try:
         await message.delete()
@@ -281,7 +321,10 @@ async def process_email(message: Message, state: FSMContext):
         return
     email = message.text.strip().lower()
     if email not in [e.lower() for e in config.trusted_emails]:
-        logger.warning("Unauthorized email attempt", extra={"event": "auth_unauthorized_email", "email": email, "user_id": message.chat.id})
+        logger.warning(
+            "Unauthorized email attempt",
+            extra={"event": "auth_unauthorized_email", "email": email, "user_id": message.chat.id},
+        )
         await message.answer("⛔ You are not on the trusted list. Please try again with a valid authorized email.")
         return
 
@@ -318,7 +361,10 @@ async def process_otp(message: Message, state: FSMContext):
         user.verified = 1
         s.commit()
 
-    logger.info("User successfully verified OTP", extra={"event": "user_verified", "user_id": message.chat.id, "email": user.email})
+    logger.info(
+        "User successfully verified OTP",
+        extra={"event": "user_verified", "user_id": message.chat.id, "email": user.email},
+    )
     await state.set_state(Auth.desired_title)
     await message.answer(
         "✅ <b>Email verified!</b>\n\n"
@@ -340,7 +386,9 @@ async def process_desired_title(message: Message, state: FSMContext):
             s.commit()
 
     await state.clear()
-    logger.info("User updated target role", extra={"event": "user_role_updated", "user_id": message.chat.id, "role": new_title})
+    logger.info(
+        "User updated target role", extra={"event": "user_role_updated", "user_id": message.chat.id, "role": new_title}
+    )
     await message.answer(
         f"🎯 <b>Target role saved:</b> <code>{new_title}</code>\n\n"
         f"🚀 <b>Setup complete!</b> Job Applicator AI is actively hunting for matching jobs.\n"

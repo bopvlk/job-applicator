@@ -5,10 +5,10 @@ import typer
 from rich.console import Console
 
 from job_applicator.bot.app import bot, dp, set_bot_commands
-from job_applicator.observability import setup_logging
 from job_applicator.scheduler import start_scheduler
 from job_applicator.storage.db import init_db
 from job_applicator.storage.dedup import init_qdrant
+from job_applicator.observability import init_sentry, setup_logging
 
 # 1. Initialize structured JSON logging
 setup_logging(level="INFO")
@@ -20,8 +20,13 @@ console = Console()
 
 async def boot_app() -> None:
     """Initialize databases, start APScheduler, and launch Telegram Bot polling."""
-    logger.info("Booting Job Applicator AI...", extra={"event": "app_startup", "component": "core"})
+    init_sentry()
+    logger.info(
+        "Booting Job Applicator AI...",
+        extra={"event": "app_startup", "component": "core"},
+    )
 
+    logger.info("Booting Job Applicator AI...", extra={"event": "app_startup", "component": "core"})
     # 1. Initialize databases
     init_db()
     await init_qdrant()
@@ -47,4 +52,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     app()
-

@@ -187,7 +187,9 @@ async def run_job_search_pipeline() -> None:
         users = session.exec(statement).all()
 
     if not users:
-        logger.warning("No verified users with desired_title found in DB. Skipping.", extra={"event": "no_active_users"})
+        logger.warning(
+            "No verified users with desired_title found in DB. Skipping.", extra={"event": "no_active_users"}
+        )
         return
 
     logger.info("Found active user(s) to process", extra={"event": "active_users_found", "count": len(users)})

@@ -35,6 +35,12 @@ class Config(BaseSettings):
     qdrant_url: str
     qdrant_api_key: str
 
+    # Observability (env / .env)
+    sentry_dsn: str | None = None
+    grafana_loki_url: str | None = None
+    grafana_loki_user: str | None = None
+    grafana_loki_token: str | None = None
+
     @classmethod
     def settings_customise_sources(
         cls,
