@@ -1,7 +1,7 @@
 trusted_emails:
   - bopvlk@gmail.com
 target_sites:
-  - "linkedin.com/jobs"
+  - "linkedin.com/jobs/view"
   - "jobs.dou.ua"
   - "djinni.co"
   - "work.ua"
@@ -12,6 +12,12 @@ target_sites:
   - "joburi-it.ro"
   - "bestjobs.eu"
   - "glassdoor.com"
+  - "jobitt.com"
+  - "justjoin.it"
+  - "careers.epam.com/ua/vacancy"
+  - "ro.jooble.org"
+  - "ro.indeed.com"
+  - "devjob.ro"
 ai_model: "gemini-2.5-flash"
 run_interval_minutes: 30
 min_tavily_score: 0.3
