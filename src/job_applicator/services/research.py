@@ -18,7 +18,7 @@ class RawPosting:
     score: float = 0.0
 
 
-CHUNK_SIZE = 2
+CHUNK_SIZE = 4
 
 
 IGNORE_PATTERNS = ["/zapros/", "/search", "/category", "?page=", "query=", "/jobs/search"]

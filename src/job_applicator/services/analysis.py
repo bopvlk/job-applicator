@@ -9,6 +9,7 @@ from google.genai import types
 
 from job_applicator.clients import gemini_client
 from job_applicator.config import config
+from job_applicator.services.llm import query_llm_json
 from job_applicator.services.research import RawPosting
 from job_applicator.storage.models import User
 
@@ -73,36 +74,40 @@ def _build_candidate_context(user: User) -> str:
 
 
 async def parse_resume_pdf(pdf_bytes: bytes) -> UserProfileDTO | None:
-    """Parse resume PDF bytes directly using Gemini 2.5 multimodal capabilities."""
+    """Parse resume PDF bytes directly using Gemini multimodal capabilities with model fallback."""
     prompt = "Analyze this candidate's resume and extract their profile into structured JSON format."
-    try:
-        response = await asyncio.to_thread(
-            gemini_client.models.generate_content,
-            model=config.ai_model,
-            contents=[
-                types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-                prompt,
-            ],
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": UserProfileDTO,
-            },
-        )
-        if not response.text:
-            return None
-        data: UserProfileDTO = json.loads(response.text)
-        return data
-    except Exception as e:
-        logger.error(
-            "Failed to parse resume PDF with Gemini",
-            exc_info=True,
-            extra={"event": "resume_pdf_parse_error", "error": str(e)},
-        )
-        return None
+    gemini_models = config.ai_model if isinstance(config.ai_model, list) else [config.ai_model]
+
+    for model in gemini_models:
+        try:
+            response = await asyncio.to_thread(
+                gemini_client.models.generate_content,
+                model=model,
+                contents=[
+                    types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                    prompt,
+                ],
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": UserProfileDTO,
+                },
+            )
+            if response and response.text:
+                data: UserProfileDTO = json.loads(response.text)
+                return data
+        except Exception as e:
+            logger.warning(
+                "Gemini model failed to parse resume PDF, trying next model",
+                extra={"event": "resume_pdf_model_fallback", "model": model, "error": str(e)},
+            )
+            continue
+
+    logger.error("All Gemini models failed to parse resume PDF", extra={"event": "resume_pdf_parse_error"})
+    return None
 
 
 async def analyze_job(posting: RawPosting, user: User) -> AnalyzedJob | None:
-    """Evaluate job posting with Gemini against candidate profile."""
+    """Evaluate job posting with universal LLM router against candidate profile."""
     candidate_profile = _build_candidate_context(user)
     prompt = f"""
     You are an expert technical recruiter and evaluator. Evaluate the following job posting for the candidate.
@@ -119,28 +124,11 @@ async def analyze_job(posting: RawPosting, user: User) -> AnalyzedJob | None:
     Evaluate if this is a single job posting, if it is active/fresh, calculate dimension scores (0-100), extract red flags, and summarize fit.
     """
 
-    try:
-        response = await asyncio.to_thread(
-            gemini_client.models.generate_content,
-            model=config.ai_model,
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": JobAnalysisResult,
-            },
-        )
-
-        if not response.text:
-            return None
-        result: JobAnalysisResult = json.loads(response.text)
-        return AnalyzedJob(posting=posting, analysis=result)
-    except Exception as e:
-        logger.error(
-            "Failed to analyze job with Gemini",
-            exc_info=True,
-            extra={"event": "job_analysis_error", "url": posting.url, "error": str(e)},
-        )
+    result: JobAnalysisResult | None = await query_llm_json(prompt, schema=JobAnalysisResult)
+    if not result:
         return None
+
+    return AnalyzedJob(posting=posting, analysis=result)
 
 
 async def analyze_jobs(postings: list[RawPosting], user: User) -> list[AnalyzedJob]:
@@ -151,7 +139,7 @@ async def analyze_jobs(postings: list[RawPosting], user: User) -> list[AnalyzedJ
 
 
 async def generate_cover_letters(job_title: str, job_content: str, user: User) -> CoverLetterVariants | None:
-    """Generate 3 tailored cover letter variants on-demand based on custom prompt file."""
+    """Generate 3 tailored cover letter variants on-demand based on custom prompt file and universal LLM router."""
     candidate_profile = _build_candidate_context(user)
     template = COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip() if COVER_LETTER_PROMPT_FILE.exists() else ""
 
@@ -172,24 +160,4 @@ async def generate_cover_letters(job_title: str, job_content: str, user: User) -
         {job_content[:6000]}
         """
 
-    try:
-        response = await asyncio.to_thread(
-            gemini_client.models.generate_content,
-            model=config.ai_model,
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": CoverLetterVariants,
-            },
-        )
-        if not response.text:
-            return None
-        data: CoverLetterVariants = json.loads(response.text)
-        return data
-    except Exception as e:
-        logger.error(
-            "Failed to generate cover letters with Gemini",
-            exc_info=True,
-            extra={"event": "cover_letter_gen_error", "job_title": job_title, "error": str(e)},
-        )
-        return None
+    return await query_llm_json(prompt, schema=CoverLetterVariants)
