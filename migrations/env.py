@@ -6,6 +6,7 @@ from sqlmodel import SQLModel
 
 # 1. Database URI from application config
 from job_applicator.config import config
+
 # 2. Import all models so Alembic reflects User and Job schemas
 from job_applicator.storage.models import Job, User  # noqa: F401
 
