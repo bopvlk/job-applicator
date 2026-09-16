@@ -92,3 +92,16 @@ async def run_pipeline_for_user(user: User) -> None:
   * **`Ruff` & `ty`:** Enterprise-grade linting, formatting, and strict type safety.
   * **GitHub Actions:** Automated pipeline building multi-arch Docker images on GHCR and deploying via SSH.
 
+### 11. 📦 Alembic (Database Versioning & Migration Control)
+* **Role:** Schema Evolution & Zero-Downtime Data Migrations.
+* **Why chosen:**
+  * **Versioned Schema History:** Tracks schema changes as reproducible Python scripts in `migrations/versions/`.
+  * **Non-Destructive Deployments:** Applies new database columns (`alembic upgrade head`) without dropping existing users or application history.
+  * **Rollback Protection:** Enables single-command rollbacks (`alembic downgrade -1`) if needed.
+
+### 12. 🔭 Observability & APM (Structured JSON Logging & Sentry)
+* **Role:** 100% Production Visibility, Error Catching & Performance Tracing.
+* **Why chosen:**
+  * **High-Performance JSON Logging:** Standardized machine-parsable logs with rich contextual metadata (`event`, `user_id`, `match_score`, `latency_ms`).
+  * **Sentry APM & Crash Reporting:** Automatically catches unhandled exceptions across async `APScheduler` jobs and Telegram polling loops, providing line-level stack traces and API latency profiles.
+
