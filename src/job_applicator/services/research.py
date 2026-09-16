@@ -42,6 +42,7 @@ async def search_google_serp(query: str, domains: list[str]) -> list[RawPosting]
         "q": full_query,
         "api_key": config.serp_api_key,
         "num": "5",
+        "tbs": "qdr:w",
     }
 
     try:
@@ -53,7 +54,7 @@ async def search_google_serp(query: str, domains: list[str]) -> list[RawPosting]
                 "domains": domains,
             },
         )
-        async with http.get("https://serpapi.com/search.json", params=params, timeout=20) as resp:
+        async with http.get("https://serpapi.com/search.json", params=params, timeout=40) as resp:
             if resp.status == 200:
                 data = await resp.json()
                 results = data.get("organic_results", [])
@@ -126,11 +127,18 @@ async def search_tavily(query: str, domains: list[str]) -> list[RawPosting]:
             )
         return postings
     except Exception as e:
-        logger.error(
-            "Tavily search query failed",
-            exc_info=True,
-            extra={"event": "tavily_query_failed", "query": query, "error": str(e)},
-        )
+        err_msg = str(e)
+        if "exceeds your plan's set usage limit" in err_msg or "ForbiddenError" in err_msg:
+            logger.warning(
+                "Tavily search skipped: monthly plan usage limit exceeded",
+                extra={"event": "tavily_quota_exceeded", "query": query},
+            )
+        else:
+            logger.error(
+                "Tavily search query failed",
+                exc_info=True,
+                extra={"event": "tavily_query_failed", "query": query, "error": err_msg},
+            )
         return []
 
 

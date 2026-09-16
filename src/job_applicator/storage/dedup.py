@@ -14,7 +14,7 @@ VECTOR_SIZE = 384
 
 
 async def init_qdrant() -> None:
-    """Ensure the Qdrant collection exists."""
+    """Ensure the Qdrant collection exists and vector dimensions match."""
     logger.info(
         "Checking Qdrant collection existence",
         extra={"event": "qdrant_check_collection", "collection": COLLECTION_NAME},
@@ -22,7 +22,33 @@ async def init_qdrant() -> None:
     try:
         collections = await qdrant.get_collections()
         names = [c.name for c in collections.collections]
-        if COLLECTION_NAME not in names:
+
+        recreate = False
+        if COLLECTION_NAME in names:
+            info = await qdrant.get_collection(COLLECTION_NAME)
+            current_size = None
+            if hasattr(info.config.params.vectors, "size"):
+                current_size = info.config.params.vectors.size
+            elif isinstance(info.config.params.vectors, dict):
+                vec_param = info.config.params.vectors.get("") or next(iter(info.config.params.vectors.values()), None)
+                if vec_param and hasattr(vec_param, "size"):
+                    current_size = vec_param.size
+
+            if current_size is not None and current_size != VECTOR_SIZE:
+                logger.warning(
+                    "Qdrant collection vector size mismatch, recreating collection",
+                    extra={
+                        "event": "qdrant_dimension_mismatch",
+                        "current_size": current_size,
+                        "expected_size": VECTOR_SIZE,
+                    },
+                )
+                await qdrant.delete_collection(COLLECTION_NAME)
+                recreate = True
+        else:
+            recreate = True
+
+        if recreate:
             logger.info(
                 "Creating new Qdrant vector collection",
                 extra={
@@ -42,6 +68,7 @@ async def init_qdrant() -> None:
             exc_info=True,
             extra={"event": "qdrant_init_error", "error": str(e)},
         )
+
 
 
 async def filter_duplicates(postings: list[RawPosting], score_threshold: float = 0.85) -> list[RawPosting]:

@@ -110,11 +110,16 @@ async def run_pipeline_for_user(user: User) -> tuple[int, int, int]:
         for item in analyzed_jobs:
             analysis = item.analysis
 
+            # Extract scores safely with default fallbacks
+            is_single = bool(analysis.get("is_single_job_posting", True))
+            is_fresh = bool(analysis.get("is_active_and_fresh", True))
+            overall_score = int(analysis.get("overall_match_score", 0))
+
             # 🚫 Quality Gate: Skip catalog pages, stale posts, or low score
             if (
-                not analysis["is_single_job_posting"]
-                or not analysis["is_active_and_fresh"]
-                or analysis["overall_match_score"] < user.min_match_score
+                not is_single
+                or not is_fresh
+                or overall_score < user.min_match_score
             ):
                 discarded_count += 1
                 logger.info(
@@ -123,26 +128,33 @@ async def run_pipeline_for_user(user: User) -> tuple[int, int, int]:
                         "event": "job_discarded",
                         "user_id": user_id,
                         "url": item.posting.url,
-                        "is_single": analysis["is_single_job_posting"],
-                        "is_fresh": analysis["is_active_and_fresh"],
-                        "score": analysis["overall_match_score"],
+                        "is_single": is_single,
+                        "is_fresh": is_fresh,
+                        "score": overall_score,
                         "min_threshold": user.min_match_score,
                     },
                 )
                 continue
 
             # 💾 Save matching job to DB
+            red_flags_raw = analysis.get("red_flags")
+            red_flags_text = (
+                ", ".join(red_flags_raw)
+                if isinstance(red_flags_raw, list)
+                else (str(red_flags_raw) if red_flags_raw else None)
+            )
+
             job_record = Job(
                 user_chat_id=user_id,
                 uri=item.posting.url,
                 title=item.posting.title,
-                company=analysis.get("company_summary", "")[:100],
-                match_pct=analysis["overall_match_score"],
-                stack_match_pct=analysis["stack_match_score"],
-                seniority_match_pct=analysis["seniority_match_score"],
-                location_match_pct=analysis["location_salary_match_score"],
+                company=str(analysis.get("company_summary", ""))[:100] if analysis.get("company_summary") else None,
+                match_pct=overall_score,
+                stack_match_pct=int(analysis.get("stack_match_score", overall_score)),
+                seniority_match_pct=int(analysis.get("seniority_match_score", overall_score)),
+                location_match_pct=int(analysis.get("location_salary_match_score", overall_score)),
                 company_summary=analysis.get("company_summary"),
-                red_flags=", ".join(analysis.get("red_flags", [])) if analysis.get("red_flags") else None,
+                red_flags=red_flags_text,
                 raw_text=item.posting.content,
                 status=JobStatus.NEW,
             )

@@ -34,7 +34,15 @@ async def query_llm_json(
                 config=gen_config,
             )
             if response and response.text:
-                return json.loads(response.text)
+                text = response.text.strip()
+                if text.startswith("```"):
+                    lines = text.splitlines()
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]
+                    if lines and lines[-1].startswith("```"):
+                        lines = lines[:-1]
+                    text = "\n".join(lines).strip()
+                return json.loads(text)
         except Exception as e:
             logger.warning(
                 "Gemini model attempt failed, falling back",
@@ -57,7 +65,12 @@ async def query_llm_json(
             "Content-Type": "application/json",
         }
 
-        mistral_prompt = f"{prompt}\n\nIMPORTANT: Respond with STRICT valid JSON only."
+        keys_hint = ""
+        if schema is not None and hasattr(schema, "__annotations__"):
+            keys = list(schema.__annotations__.keys())
+            keys_hint = f"\nThe JSON object MUST contain the following fields: {keys}."
+
+        mistral_prompt = f"{prompt}\n\nIMPORTANT: Respond with STRICT valid JSON only.{keys_hint}"
 
         for model in mistral_models:
             try:
@@ -69,7 +82,14 @@ async def query_llm_json(
                 async with http.post(endpoint, headers=headers, json=payload, timeout=30) as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        content = data["choices"][0]["message"]["content"]
+                        content = data["choices"][0]["message"]["content"].strip()
+                        if content.startswith("```"):
+                            lines = content.splitlines()
+                            if lines[0].startswith("```"):
+                                lines = lines[1:]
+                            if lines and lines[-1].startswith("```"):
+                                lines = lines[:-1]
+                            content = "\n".join(lines).strip()
                         return json.loads(content)
                     else:
                         err_text = await resp.text()
@@ -101,3 +121,4 @@ async def query_llm_json(
         extra={"event": "llm_all_providers_failed"},
     )
     return None
+

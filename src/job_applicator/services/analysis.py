@@ -132,8 +132,16 @@ async def analyze_job(posting: RawPosting, user: User) -> AnalyzedJob | None:
 
 
 async def analyze_jobs(postings: list[RawPosting], user: User) -> list[AnalyzedJob]:
-    """Analyze multiple job postings in parallel."""
-    tasks = [analyze_job(p, user) for p in postings]
+    """Analyze multiple job postings with concurrency throttling to prevent rate limits."""
+    semaphore = asyncio.Semaphore(2)
+
+    async def _throttled_analyze(p: RawPosting) -> AnalyzedJob | None:
+        async with semaphore:
+            res = await analyze_job(p, user)
+            await asyncio.sleep(0.3)  # Gentle spacing between calls
+            return res
+
+    tasks = [_throttled_analyze(p) for p in postings]
     results = await asyncio.gather(*tasks)
     return [r for r in results if r is not None]
 
