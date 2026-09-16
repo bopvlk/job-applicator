@@ -55,9 +55,7 @@ class User(SQLModel, table=True):
     # 👤 Candidate Profile Fields (Populated via PDF or Commands)
     years_experience: int | None = None
     top_skills: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    key_achievements: list[str] = Field(
-        default_factory=list, sa_column=Column(JSON)
-    )
+    key_achievements: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     preferred_location: str | None = None
     min_salary: str | None = None
     bio_summary: str | None = None
