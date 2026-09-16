@@ -85,7 +85,6 @@ class LokiHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         try:
             formatted = self.format(record)
-            # Наносекундний timestamp для Loki
             ts_ns = str(int(record.created * 1e9))
             self.queue.put_nowait((record.levelname, ts_ns, formatted))
         except Exception:
