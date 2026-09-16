@@ -19,5 +19,5 @@ target_sites:
   - "ro.indeed.com"
   - "devjob.ro"
 ai_model: "gemini-2.5-flash"
-run_interval_minutes: 30
+run_interval_minutes: 180
 min_tavily_score: 0.3
