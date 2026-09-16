@@ -18,6 +18,12 @@ target_sites:
   - "ro.jooble.org"
   - "ro.indeed.com"
   - "devjob.ro"
-ai_model: "gemini-2.5-flash"
-run_interval_minutes: 180
+ai_model: 
+  - "gemini-3.6-flash"
+  - "gemini-3.5-flash-lite"
+mistral_model: 
+  - "ministral-14b-latest"
+  - "mistral-small-latest"
+run_interval_minutes: 180 #deprecated, use cron_hours instead
+cron_hours: "9,12,16,20"
 min_tavily_score: 0.3
