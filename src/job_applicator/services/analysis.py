@@ -1,49 +1,124 @@
 import asyncio
+from dataclasses import dataclass
+import json
+import logging
 from pathlib import Path
+from typing import TypedDict
 
-from pydantic import BaseModel, Field
+from google.genai import types
 
 from job_applicator.clients import gemini_client
 from job_applicator.config import config
 from job_applicator.services.research import RawPosting
+from job_applicator.storage.models import User
 
-COVER_LETTER_PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "cover_letter.md"
-COVER_LETTER_PROMPT = (
-    COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip() if COVER_LETTER_PROMPT_FILE.exists() else ""
+logger = logging.getLogger(__name__)
+
+COVER_LETTER_PROMPT_FILE = (
+    Path(__file__).parent.parent / "prompts" / "cover_letter.md"
 )
 
 
-class JobAnalysisResult(BaseModel):
-    company_summary: str = Field(description="Brief summary of the company and role")
-    match_percentage: int = Field(description="Match percentage (0 to 100) based on user's target role")
-    red_flags: str = Field(description="Any potential red flags or warning signs in the posting")
-    draft_cover_letter: str = Field(
-        description=f"Tailored cover letter strictly following guidelines:\n{COVER_LETTER_PROMPT}"
-    )
+class UserProfileDTO(TypedDict):
+    """Candidate profile parsed from PDF."""
+    years_experience: int | None
+    top_skills: list[str]
+    key_achievements: list[str]
+    preferred_location: str | None
+    min_salary: str | None
+    bio_summary: str | None
 
 
-class AnalyzedJob(BaseModel):
+class CoverLetterVariants(TypedDict):
+    """3 distinct tailored cover letter variations."""
+    variant_1: str
+    variant_2: str
+    variant_3: str
+
+
+class JobAnalysisResult(TypedDict):
+    """Multi-factor evaluation breakdown and quality gate."""
+    is_single_job_posting: bool
+    is_active_and_fresh: bool
+    company_summary: str
+    stack_match_score: int
+    seniority_match_score: int
+    location_salary_match_score: int
+    overall_match_score: int
+    red_flags: list[str]
+    fit_summary: str
+
+
+@dataclass
+class AnalyzedJob:
     posting: RawPosting
     analysis: JobAnalysisResult
 
 
-async def analyze_job(posting: RawPosting, desired_title: str) -> AnalyzedJob | None:
-    """Analyze a single job posting using Gemini AI structured output."""
+def _build_candidate_context(user: User) -> str:
+    """Format candidate profile attributes for prompt injection."""
+    skills = ", ".join(user.top_skills) if user.top_skills else "Not specified"
+    achievements = (
+        "\n".join(f"- {a}" for a in user.key_achievements)
+        if user.key_achievements
+        else "Not specified"
+    )
+    return f"""
+- Target Role: {user.desired_title or 'Software Engineer'}
+- Commercial Experience: {user.years_experience or 3}+ years
+- Top Skills: {skills}
+- Key Achievements:
+{achievements}
+- Location & Preferences: {user.preferred_location or 'Remote (EU/Global)'}
+- Salary Expectations: {user.min_salary or 'Open / Market'}
+- Professional Bio: {user.bio_summary or 'Experienced engineer'}
+""".strip()
+
+
+async def parse_resume_pdf(pdf_bytes: bytes) -> UserProfileDTO | None:
+    """Parse resume PDF bytes directly using Gemini 2.5 multimodal capabilities."""
+    prompt = "Analyze this candidate's resume and extract their profile into structured JSON format."
+    try:
+        response = await asyncio.to_thread(
+            gemini_client.models.generate_content,
+            model=config.ai_model,
+            contents=[
+                types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                prompt,
+            ],
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": UserProfileDTO,
+            },
+        )
+        if not response.text:
+            return None
+        data: UserProfileDTO = json.loads(response.text)
+        return data
+    except Exception as e:
+        logger.error("Failed to parse resume PDF with Gemini", exc_info=True, extra={"event": "resume_pdf_parse_error", "error": str(e)})
+        return None
+
+
+async def analyze_job(posting: RawPosting, user: User) -> AnalyzedJob | None:
+    """Evaluate job posting with Gemini against candidate profile."""
+    candidate_profile = _build_candidate_context(user)
     prompt = f"""
-    Evaluate the following job posting for a candidate targeting the role: "{desired_title}".
+    You are an expert technical recruiter and evaluator. Evaluate the following job posting for the candidate.
 
-    Job Title: {posting.title}
-    Job URL: {posting.url}
+    ## Candidate Profile:
+    {candidate_profile}
 
-    Job Description:
+    ## Job Vacancy:
+    - Title: {posting.title}
+    - URL: {posting.url}
+    - Content:
     {posting.content[:6000]}
 
-    Candidate Cover Letter Instructions:
-    {COVER_LETTER_PROMPT}
+    Evaluate if this is a single job posting, if it is active/fresh, calculate dimension scores (0-100), extract red flags, and summarize fit.
     """
 
     try:
-        # Request strict Pydantic JSON response from Gemini
         response = await asyncio.to_thread(
             gemini_client.models.generate_content,
             model=config.ai_model,
@@ -54,17 +129,66 @@ async def analyze_job(posting: RawPosting, desired_title: str) -> AnalyzedJob | 
             },
         )
 
-        # Parse Pydantic object directly from JSON
         if not response.text:
             return None
-        result = JobAnalysisResult.model_validate_json(response.text)
+        result: JobAnalysisResult = json.loads(response.text)
         return AnalyzedJob(posting=posting, analysis=result)
-    except Exception:
+    except Exception as e:
+        logger.error("Failed to analyze job with Gemini", exc_info=True, extra={"event": "job_analysis_error", "url": posting.url, "error": str(e)})
         return None
 
 
-async def analyze_jobs(postings: list[RawPosting], desired_title: str) -> list[AnalyzedJob]:
-    """Analyze a list of unique job postings in parallel."""
-    tasks = [analyze_job(p, desired_title) for p in postings]
+async def analyze_jobs(
+    postings: list[RawPosting], user: User
+) -> list[AnalyzedJob]:
+    """Analyze multiple job postings in parallel."""
+    tasks = [analyze_job(p, user) for p in postings]
     results = await asyncio.gather(*tasks)
     return [r for r in results if r is not None]
+
+
+async def generate_cover_letters(
+    job_title: str, job_content: str, user: User
+) -> CoverLetterVariants | None:
+    """Generate 3 tailored cover letter variants on-demand based on custom prompt file."""
+    candidate_profile = _build_candidate_context(user)
+    template = (
+        COVER_LETTER_PROMPT_FILE.read_text(encoding="utf-8").strip()
+        if COVER_LETTER_PROMPT_FILE.exists()
+        else ""
+    )
+
+    if "{candidate_profile}" in template and "{job_description}" in template:
+        prompt = template.format(
+            candidate_profile=candidate_profile,
+            job_description=f"Title: {job_title}\n\n{job_content[:6000]}",
+        )
+    else:
+        prompt = f"""
+        {template}
+
+        ## Candidate Profile:
+        {candidate_profile}
+
+        ## Job Vacancy:
+        Title: {job_title}
+        {job_content[:6000]}
+        """
+
+    try:
+        response = await asyncio.to_thread(
+            gemini_client.models.generate_content,
+            model=config.ai_model,
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": CoverLetterVariants,
+            },
+        )
+        if not response.text:
+            return None
+        data: CoverLetterVariants = json.loads(response.text)
+        return data
+    except Exception as e:
+        logger.error("Failed to generate cover letters with Gemini", exc_info=True, extra={"event": "cover_letter_gen_error", "job_title": job_title, "error": str(e)})
+        return None
