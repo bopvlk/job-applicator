@@ -15,25 +15,26 @@ from job_applicator.storage.db import get_session
 from job_applicator.storage.dedup import filter_duplicates
 from job_applicator.storage.models import Job, User
 
+from apscheduler.triggers.cron import CronTrigger
+
 logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 
 
 def start_scheduler() -> AsyncIOScheduler:
-    """Start the periodic background job search scheduler."""
+    """Start the periodic background job search scheduler (Cron: 9:00, 12:00, 16:00, 20:00)."""
+    cron_hours = getattr(config, "cron_hours", "9,12,16,20")
     logger.info(
-        "Scheduling periodic job search pipeline",
+        "Scheduling periodic job search pipeline via Cron",
         extra={
             "event": "scheduler_initialized",
-            "interval_minutes": config.run_interval_minutes,
+            "cron_hours": cron_hours,
         },
     )
     scheduler.add_job(
         run_job_search_pipeline,
-        trigger="interval",
-        minutes=config.run_interval_minutes,
-        next_run_time=datetime.now(),
+        trigger=CronTrigger(hour=cron_hours, minute=0),
         id="job_search_pipeline",
         replace_existing=True,
     )

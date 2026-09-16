@@ -35,7 +35,7 @@ class Config(BaseSettings):
     mistral_api_key: str | None = None
 
     # external APIs (env / .env)
-    serp_api_key: str
+    serp_api_key: str | None = None
     tavily_api_key: str
     jina_api_key: str | None = None
     qdrant_url: str
