@@ -41,7 +41,7 @@ async def boot_app() -> None:
 
     # 4. Start Telegram bot
     logger.info("Telegram Bot listening for incoming updates", extra={"event": "bot_listening", "component": "bot"})
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, polling_timeout=20)
 
 
 @app.command()

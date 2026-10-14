@@ -13,6 +13,16 @@ import sentry_sdk
 from job_applicator.config import config
 
 
+def _sentry_before_send(event: dict, hint: dict) -> dict | None:
+    """Ignore transient Telegram polling connection resets in Sentry."""
+    if "exc_info" in hint:
+        exc_type, exc_val, _ = hint["exc_info"]
+        exc_name = getattr(exc_type, "__name__", "")
+        if "TelegramNetworkError" in exc_name or "ClientOSError" in exc_name:
+            return None
+    return event
+
+
 def init_sentry() -> None:
     """Initialization Sentry APM and errors catching."""
     if config.sentry_dsn:
@@ -20,6 +30,7 @@ def init_sentry() -> None:
             dsn=config.sentry_dsn,
             traces_sample_rate=1.0,
             send_default_pii=True,
+            before_send=_sentry_before_send,
         )
 
 

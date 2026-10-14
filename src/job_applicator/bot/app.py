@@ -38,7 +38,7 @@ async def main() -> None:
     init_db()
     await init_qdrant()
     await set_bot_commands(bot)
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, polling_timeout=20)
 
 
 if __name__ == "__main__":
