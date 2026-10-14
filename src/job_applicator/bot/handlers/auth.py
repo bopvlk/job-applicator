@@ -175,7 +175,8 @@ async def cmd_upload_resume(message: Message, state: FSMContext):
     await message.answer(
         "📄 <b>Upload Your Resume (PDF)</b>\n\n"
         "Please send your resume file as a <b>.pdf document</b>.\n"
-        "Gemini 2.5 will automatically scan it and extract your skills, experience, and achievements into your profile!",
+        "Gemini 2.5 will automatically scan it and extract your skills, "
+        "experience, and achievements into your profile!",
         parse_mode="HTML",
     )
 

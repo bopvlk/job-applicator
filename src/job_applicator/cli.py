@@ -5,10 +5,10 @@ import typer
 from rich.console import Console
 
 from job_applicator.bot.app import bot, dp, set_bot_commands
+from job_applicator.observability import init_sentry, setup_logging
 from job_applicator.scheduler import start_scheduler
 from job_applicator.storage.db import init_db
 from job_applicator.storage.dedup import init_qdrant
-from job_applicator.observability import init_sentry, setup_logging
 
 # 1. Initialize structured JSON logging
 setup_logging(level="INFO")

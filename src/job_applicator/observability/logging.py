@@ -1,12 +1,12 @@
 import base64
-from datetime import UTC, datetime
 import json
 import logging
 import queue
 import sys
 import threading
-from typing import Any
 import urllib.request
+from datetime import UTC, datetime
+from typing import Any
 
 import sentry_sdk
 

@@ -1,7 +1,7 @@
-from datetime import datetime
 import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from sqlmodel import select
 
 from job_applicator.bot.notifications import send_job_notification
@@ -14,8 +14,6 @@ from job_applicator.services.research import fetch_markdown, search_jobs
 from job_applicator.storage.db import get_session
 from job_applicator.storage.dedup import filter_duplicates
 from job_applicator.storage.models import Job, User
-
-from apscheduler.triggers.cron import CronTrigger
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import asyncio
-from dataclasses import dataclass
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
 
@@ -121,7 +121,8 @@ async def analyze_job(posting: RawPosting, user: User) -> AnalyzedJob | None:
     - Content:
     {posting.content[:6000]}
 
-    Evaluate if this is a single job posting, if it is active/fresh, calculate dimension scores (0-100), extract red flags, and summarize fit.
+    Evaluate if this is a single job posting, if it is active/fresh,
+    calculate dimension scores (0-100), extract red flags, and summarize fit.
     """
 
     result: JobAnalysisResult | None = await query_llm_json(prompt, schema=JobAnalysisResult)

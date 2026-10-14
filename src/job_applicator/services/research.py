@@ -1,6 +1,6 @@
 import asyncio
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from job_applicator.clients import get_http, tavily
 from job_applicator.config import config

@@ -1,4 +1,4 @@
-.PHONY: help run dev lint format test deploy format
+.PHONY: help run dev lint format test deploy
 
 # Default goal
 .DEFAULT_GOAL := help
@@ -12,8 +12,8 @@ run: ## Run Job Hunter AI locally
 	uv run python -m job_applicator
 
 lint: ## Run Ruff linter and formatter
-	uv run ruff check src --fix
-	uv run ruff format src
+	uv run ruff check .
+	uv run ruff format --check .
 
 test: ## Run test suite
 	uv run pytest
@@ -39,5 +39,6 @@ deploy: ## Automatically bump patch tag, create empty release commit, and push t
 	git push origin "$$NEXT_TAG" && \
 	echo "✅ Created release commit and pushed $$NEXT_TAG successfully! CI/CD deploy started."
 
-format: ## Run code formatter
-	uvx ruff format .
+format: ## Run code formatter and linter auto-fixes
+	uv run ruff check . --fix
+	uv run ruff format .
