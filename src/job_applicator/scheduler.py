@@ -132,11 +132,19 @@ async def run_pipeline_for_user(user: User) -> tuple[int, int, int]:
 
             # 💾 Save matching job to DB
             red_flags_raw = analysis.get("red_flags")
-            red_flags_text = (
-                ", ".join(red_flags_raw)
-                if isinstance(red_flags_raw, list)
-                else (str(red_flags_raw) if red_flags_raw else None)
-            )
+            if isinstance(red_flags_raw, list):
+                flags: list[str] = []
+                for item in red_flags_raw:
+                    if isinstance(item, dict):
+                        # Extract text values from dict (e.g. {"flag": "...", "severity": "..."})
+                        flags.append(": ".join(str(v) for v in item.values() if v))
+                    elif item is not None:
+                        flags.append(str(item))
+                red_flags_text = ", ".join(flags) if flags else None
+            elif red_flags_raw:
+                red_flags_text = str(red_flags_raw)
+            else:
+                red_flags_text = None
 
             job_record = Job(
                 user_chat_id=user_id,
