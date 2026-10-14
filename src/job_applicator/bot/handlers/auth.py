@@ -124,17 +124,23 @@ async def cmd_profile(message: Message):
             return
 
         # Calculate statistics from Job table
-        total_sent = s.exec(select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id)).one()
+        total_sent = s.exec(
+            select(func.count()).select_from(Job).where(Job.user_chat_id == user.telegram_chat_id)
+        ).one()
         applied_count = s.exec(
-            select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.APPLIED)
+            select(func.count())
+            .select_from(Job)
+            .where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.APPLIED)
         ).one()
         rejected_count = s.exec(
-            select(func.count(Job.id)).where(
-                Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.REJECTED
-            )
+            select(func.count())
+            .select_from(Job)
+            .where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.REJECTED)
         ).one()
         pending_count = s.exec(
-            select(func.count(Job.id)).where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.NEW)
+            select(func.count())
+            .select_from(Job)
+            .where(Job.user_chat_id == user.telegram_chat_id, Job.status == JobStatus.NEW)
         ).one()
 
     skills_text = ", ".join(user.top_skills) if user.top_skills else "<i>Not set (Use /upload_resume)</i>"

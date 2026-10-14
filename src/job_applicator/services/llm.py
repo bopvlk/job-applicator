@@ -3,6 +3,9 @@ import json
 import logging
 from typing import Any
 
+import aiohttp
+from google.genai import types
+
 from job_applicator.clients import gemini_client, get_http
 from job_applicator.config import config
 
@@ -23,15 +26,16 @@ async def query_llm_json(
     gemini_models = config.ai_model if isinstance(config.ai_model, list) else [config.ai_model]
     for model in gemini_models:
         try:
-            gen_config: dict[str, Any] = {"response_mime_type": "application/json"}
+            gen_config: types.GenerateContentConfigDict = {"response_mime_type": "application/json"}
             if schema is not None:
                 gen_config["response_schema"] = schema
 
             response = await asyncio.to_thread(
-                gemini_client.models.generate_content,
-                model=model,
-                contents=prompt,
-                config=gen_config,
+                lambda m=model, cfg=gen_config: gemini_client.models.generate_content(
+                    model=m,
+                    contents=prompt,
+                    config=cfg,
+                )
             )
             if response and response.text:
                 text = response.text.strip()
@@ -79,7 +83,12 @@ async def query_llm_json(
                     "messages": [{"role": "user", "content": mistral_prompt}],
                     "response_format": {"type": "json_object"},
                 }
-                async with http.post(endpoint, headers=headers, json=payload, timeout=30) as resp:
+                async with http.post(
+                    endpoint,
+                    headers=headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         content = data["choices"][0]["message"]["content"].strip()

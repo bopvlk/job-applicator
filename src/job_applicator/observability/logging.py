@@ -6,7 +6,7 @@ import sys
 import threading
 import urllib.request
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 import sentry_sdk
 
@@ -30,7 +30,7 @@ def init_sentry() -> None:
             dsn=config.sentry_dsn,
             traces_sample_rate=1.0,
             send_default_pii=True,
-            before_send=_sentry_before_send,
+            before_send=cast(Any, _sentry_before_send),
         )
 
 
@@ -144,11 +144,12 @@ def setup_logging(level: str = "INFO") -> None:
     root_logger.handlers.clear()
     root_logger.addHandler(stdout_handler)
 
-    loki_handler = LokiHandler(
-        url=config.grafana_loki_url,
-        user=config.grafana_loki_user,
-        token=config.grafana_loki_token,
-        app_name="job-applicator",
-    )
-    loki_handler.setFormatter(json_formatter)
-    root_logger.addHandler(loki_handler)
+    if config.grafana_loki_url and config.grafana_loki_user and config.grafana_loki_token:
+        loki_handler = LokiHandler(
+            url=config.grafana_loki_url,
+            user=config.grafana_loki_user,
+            token=config.grafana_loki_token,
+            app_name="job-applicator",
+        )
+        loki_handler.setFormatter(json_formatter)
+        root_logger.addHandler(loki_handler)

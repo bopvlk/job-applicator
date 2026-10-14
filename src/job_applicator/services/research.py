@@ -1,6 +1,9 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from typing import Any
+
+import aiohttp
 
 from job_applicator.clients import get_http, tavily
 from job_applicator.config import config
@@ -54,7 +57,11 @@ async def search_google_serp(query: str, domains: list[str]) -> list[RawPosting]
                 "domains": domains,
             },
         )
-        async with http.get("https://serpapi.com/search.json", params=params, timeout=40) as resp:
+        async with http.get(
+            "https://serpapi.com/search.json",
+            params=params,
+            timeout=aiohttp.ClientTimeout(total=40),
+        ) as resp:
             if resp.status == 200:
                 data = await resp.json()
                 results = data.get("organic_results", [])
@@ -102,15 +109,17 @@ async def search_tavily(query: str, domains: list[str]) -> list[RawPosting]:
                 "domains": domains,
             },
         )
-        data = await asyncio.to_thread(
-            tavily.search,
-            query=query,
-            search_depth="basic",
-            max_results=5,
-            include_raw_content=True,
-            time_range="week",
-            include_domains=domains if domains else None,
-        )
+        search_kwargs: dict[str, Any] = {
+            "query": query,
+            "search_depth": "basic",
+            "max_results": 5,
+            "include_raw_content": True,
+            "time_range": "week",
+        }
+        if domains:
+            search_kwargs["include_domains"] = domains
+
+        data = await asyncio.to_thread(lambda: tavily.search(**search_kwargs))
         results = data.get("results", [])
         postings: list[RawPosting] = []
         for r in results:
