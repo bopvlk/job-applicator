@@ -121,4 +121,3 @@ async def query_llm_json(
         extra={"event": "llm_all_providers_failed"},
     )
     return None
-

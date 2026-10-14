@@ -70,7 +70,6 @@ async def init_qdrant() -> None:
         )
 
 
-
 async def filter_duplicates(postings: list[RawPosting], score_threshold: float = 0.85) -> list[RawPosting]:
     """Deduplicate postings using Qdrant Cloud Inference."""
     await init_qdrant()

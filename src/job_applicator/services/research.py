@@ -146,9 +146,7 @@ async def search_jobs(queries: list[str], domains: list[str]) -> list[RawPosting
     """Search jobs using Tier 1 (SerpAPI Google Search) -> Tier 2 (Tavily) fallback."""
     postings: list[RawPosting] = []
     seen_urls: set[str] = set()
-    domain_chunks = (
-        [domains[i : i + CHUNK_SIZE] for i in range(0, len(domains), CHUNK_SIZE)] if domains else [[]]
-    )
+    domain_chunks = [domains[i : i + CHUNK_SIZE] for i in range(0, len(domains), CHUNK_SIZE)] if domains else [[]]
 
     for q in queries:
         for d_c in domain_chunks:

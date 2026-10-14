@@ -116,11 +116,7 @@ async def run_pipeline_for_user(user: User) -> tuple[int, int, int]:
             overall_score = int(analysis.get("overall_match_score", 0))
 
             # 🚫 Quality Gate: Skip catalog pages, stale posts, or low score
-            if (
-                not is_single
-                or not is_fresh
-                or overall_score < user.min_match_score
-            ):
+            if not is_single or not is_fresh or overall_score < user.min_match_score:
                 discarded_count += 1
                 logger.info(
                     "Job discarded by quality gate",
