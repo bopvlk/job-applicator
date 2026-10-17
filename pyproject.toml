@@ -34,6 +34,7 @@ dependencies = [
   "apscheduler>=3.11.3",
   "sqlalchemy-cockroachdb>=2.0.4",
   "sentry-sdk>=2.69.2",
+  "duckduckgo-search>=8.1.1",
 ]
 requires-python = ">= 3.12"
 
