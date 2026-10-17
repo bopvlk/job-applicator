@@ -26,7 +26,12 @@ def get_http() -> aiohttp.ClientSession:
 tavily = TavilyClient(api_key=config.tavily_api_key)
 
 # Qdrant gets the official async client (vector upsert/search with Cloud Inference enabled).
-qdrant = AsyncQdrantClient(url=config.qdrant_url, api_key=config.qdrant_api_key, cloud_inference=True)
+qdrant = AsyncQdrantClient(
+    url=config.qdrant_url,
+    api_key=config.qdrant_api_key,
+    cloud_inference=True,
+    timeout=30,
+)
 
 # Telegram Bot client singleton
 bot = Bot(token=config.telegram_token)
