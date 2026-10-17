@@ -30,7 +30,7 @@ class RawPosting:
     score: float = 0.0
 
 
-async def duckduckgo_search(query: str, domains: list[str]) -> list[RawPosting] | None:
+async def duckduckgo_search(query: str, domains: list[str]) -> list[RawPosting]:
     """Search DuckDuckGo with domain filters and 1-week time window."""
     site_filter = " OR ".join(f"site:{d.split('/')[0]}" for d in domains if d)
     full_query = f"({site_filter}) {query}" if site_filter else query
