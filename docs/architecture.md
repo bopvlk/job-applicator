@@ -11,7 +11,7 @@ graph TD
     A1[⏰ APScheduler / Cron Loop] -->|Every 30m| B[run_pipeline_for_user]
     A2[⚡ Telegram /search_now Command] -->|On-Demand| B
     B -->|Fetch Profile & Stats| C[CockroachDB Serverless]
-    C -->|Generate Queries| D[Tavily Search API]
+    C -->|Generate Queries| D[DuckDuckGo Search]
     D -->|Fetch Content| E[Jina AI Reader]
     E -->|Semantic Deduplication| F[Qdrant Vector DB]
     F -->|If Duplicate| G[Discard]
@@ -33,7 +33,7 @@ graph TD
   - **Single Source of Truth = SQLModel:** `storage/models.py` (SQLModel table classes) IS the schema. `storage/db.py` runs `SQLModel.metadata.create_all(engine)` at startup via standard PostgreSQL dialect connection string.
 - **Vector DB (Qdrant Cloud):** Used for semantic vector embeddings and deduplication (cosine similarity threshold `0.85`).
 - **Zero Disk Secrets (AWS SSM Parameter Store):** Secrets are dynamically fetched into Docker container memory at launch without writing plain `.env` files to the server disk.
-- **Composition Root (`clients.py`):** External API clients (Gemini, Tavily, Jina Reader, Qdrant Cloud) are initialized once from `Config` in `clients.py`.
+- **Composition Root (`clients.py`):** External API clients (Gemini, Jina Reader, Qdrant Cloud) are initialized once from `Config` in `clients.py`.
 
 ---
 
@@ -201,7 +201,7 @@ All application logs are emitted in a standardized, machine-parsable JSON format
 * **Role:** Real-time crash detection and distributed tracing.
 * **Capabilities:**
   * Captures unhandled exceptions inside async loops (`APScheduler`, Telegram callbacks).
-  * Sends instant notifications when external dependencies fail (Gemini rate limits, CockroachDB timeouts, Tavily search errors).
+  * Sends instant notifications when external dependencies fail (Gemini rate limits, CockroachDB timeouts, search errors).
   * Measures latency spans for AI reasoning and database transactions.
 
 ### 3. 📊 Grafana Cloud (Loki + Prometheus + Grafana)

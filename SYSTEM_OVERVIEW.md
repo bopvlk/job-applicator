@@ -14,7 +14,7 @@ async def run_pipeline_for_user(user: User) -> None:
     queries = await build_queries(user.desired_title, user.top_skills)
 
     """2. SEARCH THE WEB & FETCH CLEAN MARKDOWN"""
-    raw_postings = await search_tavily(queries, sites=["djinni.co", "dou.ua", ...])
+    raw_postings = await search_duckduckgo(queries, sites=["djinni.co", "dou.ua", ...])
     cleaned_postings = [await jina_fetch_markdown(p.url) for p in raw_postings]
 
     """3. SEMANTIC VECTOR DEDUPLICATION (Skip already seen jobs)"""
@@ -48,9 +48,9 @@ async def run_pipeline_for_user(user: User) -> None:
   * **Ultra-Fast TypedDict JSON Output:** Returns structured schemas via standard Python `TypedDict` and `json.loads()`, running 2.5x faster with minimal memory overhead.
   * **Sub-second Latency & Low Cost:** Generates 3 targeted cover letter styles in < 1.5 seconds.
 
-### 2. 🔍 Tavily Search API
-* **Role:** Real-Time Tech Job Discovery.
-* **Why chosen:** Purpose-built for AI agents; searches specific job domains (`djinni.co`, `dou.ua`, `linkedin.com`) with `time_range="week"` to guarantee fresh, active postings.
+### 2. 🔍 DuckDuckGo Search (`duckduckgo_search`)
+* **Role:** Real-Time Tech Job Discovery without API keys or quota limits.
+* **Why chosen:** Free, open-source web search library; targets specific job domains (`djinni.co`, `dou.ua`, `linkedin.com`) with time limits (`timelimit="w"` for past week) to guarantee fresh, active postings with zero subscription fees or external API keys.
 
 ### 3. 📄 Jina AI Reader (`r.jina.ai`)
 * **Role:** Web Scraper & HTML-to-Markdown Converter.

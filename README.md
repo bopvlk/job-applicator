@@ -8,7 +8,7 @@ An autonomous, production-grade AI Agent that automates the job search lifecycle
 
 ```mermaid
 graph TD
-    A[APScheduler / Cron] -->|Trigger| B[Tavily Search API]
+    A[APScheduler / Cron] -->|Trigger| B[DuckDuckGo Search]
     B -->|Scrape Job Listings| C[Jina AI Reader]
     C -->|Raw Markdown| D[Qdrant Vector DB]
     D -->|Cosine Similarity| E{Is Duplicate?}
@@ -51,7 +51,7 @@ Built with **Aiogram 3**, the Telegram bot serves as the command center:
 - **Backend:** Python 3.13, `uv` (fast package manager), `pydantic-settings`
 - **Scheduler:** `APScheduler`
 - **Databases:** CockroachDB, Qdrant Cloud
-- **APIs:** Google Gemini (google-genai), Tavily AI Search, Jina Reader
+- **Search & APIs:** Google Gemini (google-genai), DuckDuckGo Search (duckduckgo_search), Jina Reader
 - **Infrastructure:** AWS EC2, Terraform (IaC), Docker
 - **CI/CD:** GitHub Actions, GitHub Container Registry (GHCR)
 

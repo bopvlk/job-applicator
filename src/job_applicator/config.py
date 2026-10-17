@@ -18,7 +18,6 @@ class Config(BaseSettings):
     ai_model: list[str]
     mistral_model: list[str]
     run_interval_minutes: int
-    min_tavily_score: float = 0.4
     cron_hours: str = "9,12,16,20"
 
     # secrets (env / .env)
